@@ -1,6 +1,7 @@
 import { EntitiesCardRow } from '@hakit/components';
 import { useHass, type EntityName } from '@hakit/core';
-import { Icon } from '@iconify/react';
+import { useEffect, useState } from 'react';
+import { Icon, iconLoaded, loadIcons } from '@iconify/react';
 import { getDomain, isBinarySensorDoor, isBinarySensorMotion } from '../shared/entity-domains';
 
 /**
@@ -41,6 +42,17 @@ export function EntityCard({
   customName, customIcon,
 }: EntityCardProps) {
   const entities = useHass((state: { entities?: Record<string, HaEntity> }) => state.entities);
+  const [, setIconTick] = useState(0);
+
+  // Proactively load the custom icon and the gear cog icon
+  useEffect(() => {
+    const toLoad: string[] = [];
+    if (customIcon && !iconLoaded(customIcon)) toLoad.push(customIcon);
+    if (showActions && !iconLoaded('mdi:cog')) toLoad.push('mdi:cog');
+    if (toLoad.length > 0) {
+      loadIcons(toLoad, () => setIconTick(t => t + 1));
+    }
+  }, [customIcon, showActions]);
 
   const entity = entities?.[entityId];
   const domain = getDomain(entityId);
@@ -100,12 +112,16 @@ export function EntityCard({
             }}
             title="Entity settings"
           >
-            <Icon icon="mdi:cog" width={14} height={14} />
+            {iconLoaded('mdi:cog') ? (
+              <Icon icon="mdi:cog" width={14} height={14} />
+            ) : (
+              <span style={{ fontSize: '0.85rem' }}>⚙</span>
+            )}
           </button>
         </div>
       )}
       {/* Custom icon overlay */}
-      {customIcon && (
+      {customIcon && iconLoaded(customIcon) && (
         <div className="entity-custom-icon">
           <Icon icon={customIcon} width={20} height={20} />
         </div>

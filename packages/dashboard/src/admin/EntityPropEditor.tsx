@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { Icon } from '@iconify/react';
+import { Icon, iconLoaded, loadIcons } from '@iconify/react';
 import { IconPicker } from '../components/IconPicker';
 import { apiFetch } from '../shared/utils';
 
@@ -39,6 +39,14 @@ export function EntityPropEditor({
   const [customIcon, setCustomIcon] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [, setIconTick] = useState(0);
+
+  // Ensure saved icon is loaded for display
+  useEffect(() => {
+    const toLoad: string[] = ['mdi:cog', 'mdi:eye-off'];
+    if (customIcon && !iconLoaded(customIcon)) toLoad.push(customIcon);
+    loadIcons(toLoad, () => setIconTick(t => t + 1));
+  }, [customIcon]);
 
   // Load current props
   useEffect(() => {
@@ -114,7 +122,7 @@ export function EntityPropEditor({
         ) : (
           <>
             <div className="entity-prop-header">
-              <Icon icon="mdi:cog" width={16} height={16} />
+              {iconLoaded('mdi:cog') ? <Icon icon="mdi:cog" width={16} height={16} /> : <span>⚙</span>}
               <span className="entity-prop-title">{friendlyName}</span>
               <button type="button" className="entity-prop-close" onClick={onClose}>×</button>
             </div>
@@ -159,7 +167,7 @@ export function EntityPropEditor({
                 onClick={() => { onHide(); onClose(); }}
                 title="Hide this entity"
               >
-                <Icon icon="mdi:eye-off" width={14} height={14} /> Hide
+                {iconLoaded('mdi:eye-off') ? <Icon icon="mdi:eye-off" width={14} height={14} /> : <span>👁</span>} Hide
               </button>
               <div style={{ flex: 1 }} />
               <button type="button" className="entity-prop-reset-btn" onClick={handleReset}>
