@@ -1,0 +1,1 @@
+import{F as e,y as a,o as i}from"./EntityCard-CfYf4tip.js";import"./index-Bd1r4d6-.js";function u({entity:t,...r}){return e(i,{fullWidth:!0,children:e(a,{entity:t,...r,disableScale:!0,disableRipples:!0,disableActiveState:!0,disableColumns:!0})})}export{u as ModalWeatherControls,u as default};

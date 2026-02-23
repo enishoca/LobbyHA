@@ -17,7 +17,10 @@ export function SetupWizard({ existingConfig, reconfigure }: SetupWizardProps = 
   const [haToken, setHaToken] = useState('');
   const [adminPassword, setAdminPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [port, setPort] = useState('3000');
   const [testing, setTesting] = useState(false);
+  const [testPassed, setTestPassed] = useState(false);
+  const [testVersion, setTestVersion] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [configLoaded, setConfigLoaded] = useState(false);
@@ -57,6 +60,8 @@ export function SetupWizard({ existingConfig, reconfigure }: SetupWizardProps = 
 
   const handleTestConnection = async () => {
     setTesting(true);
+    setTestPassed(false);
+    setTestVersion(null);
     setError(null);
     try {
       const result = await apiFetch<{ success: boolean; version?: string; error?: string }>(
@@ -64,8 +69,8 @@ export function SetupWizard({ existingConfig, reconfigure }: SetupWizardProps = 
         { method: 'POST', body: JSON.stringify({ haUrl, haToken }) }
       );
       if (result.success) {
-        // If reconfiguring, skip password step
-        setStep(reconfigure ? 'done-reconfig' as Step : 'password');
+        setTestPassed(true);
+        setTestVersion(result.version ?? null);
       } else {
         setError(result.error || 'Connection failed');
       }
@@ -96,6 +101,7 @@ export function SetupWizard({ existingConfig, reconfigure }: SetupWizardProps = 
           haUrl,
           haToken,
           adminPassword: reconfigure ? undefined : adminPassword,
+          port: port || undefined,
           pinEnabled: pinEnabled || undefined,
           pins: pinEnabled && pins.length > 0 ? pins : undefined,
         }),
@@ -229,6 +235,22 @@ export function SetupWizard({ existingConfig, reconfigure }: SetupWizardProps = 
             <h2>Testing Connection</h2>
             {testing ? (
               <p className="note">Connecting to Home Assistant...</p>
+            ) : testPassed ? (
+              <>
+                <p className="note" style={{ color: '#4ade80' }}>✓ Connected successfully!{testVersion ? ` (HA ${testVersion})` : ''}</p>
+                <div className="setup-actions">
+                  <button type="button" className="action-button secondary" onClick={() => setStep('token')}>
+                    ← Back
+                  </button>
+                  <button
+                    type="button"
+                    className="action-button"
+                    onClick={() => setStep(reconfigure ? 'done-reconfig' as Step : 'password')}
+                  >
+                    Next →
+                  </button>
+                </div>
+              </>
             ) : error ? (
               <>
                 <p className="note error">{error}</p>
@@ -265,6 +287,26 @@ export function SetupWizard({ existingConfig, reconfigure }: SetupWizardProps = 
               onChange={e => setConfirmPassword(e.target.value)}
               placeholder="Confirm password"
             />
+            <div className="setup-advanced">
+              <details>
+                <summary>Advanced Settings</summary>
+                <div className="form-field" style={{ marginTop: '0.75rem' }}>
+                  <label>Server Port</label>
+                  <input
+                    className="setup-input"
+                    type="number"
+                    value={port}
+                    onChange={e => setPort(e.target.value)}
+                    placeholder="3000"
+                    min="1"
+                    max="65535"
+                  />
+                  <p className="note" style={{ marginTop: '0.25rem', fontSize: '0.82rem' }}>
+                    Default: 3000. Change only if needed.
+                  </p>
+                </div>
+              </details>
+            </div>
             {error && <p className="note error">{error}</p>}
             <div className="setup-actions">
               <button type="button" className="action-button secondary" onClick={() => setStep('token')}>

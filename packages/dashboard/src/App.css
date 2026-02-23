@@ -1010,6 +1010,39 @@
   margin-top: 1rem;
 }
 
+/* Advanced settings collapsible */
+.setup-advanced {
+  margin-top: 1rem;
+}
+
+.setup-advanced details {
+  background: rgba(13, 19, 32, 0.5);
+  border: 1px solid var(--border-primary);
+  border-radius: 10px;
+  padding: 0;
+  overflow: hidden;
+}
+
+.setup-advanced summary {
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  user-select: none;
+}
+
+.setup-advanced summary:hover {
+  color: var(--text-primary);
+}
+
+.setup-advanced details[open] summary {
+  border-bottom: 1px solid var(--border-primary);
+}
+
+.setup-advanced details > :not(summary) {
+  padding: 0 1rem 1rem;
+}
+
 .setup-result {
   padding: 0.5rem 0.75rem;
   border-radius: 8px;

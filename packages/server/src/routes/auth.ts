@@ -1,8 +1,9 @@
 import { Router, type Request, type Response } from 'express';
+import { spawn } from 'child_process';
 import {
   getAdminPassword, verifyPassword, setAdminPassword,
 } from '../db.js';
-import { getConfig, updateConfig } from '../config.js';
+import { getConfig, updateConfig, cliPortOverride } from '../config.js';
 import { createSession, deleteSession, requireAdmin, hasSession } from '../middleware/admin-auth.js';
 import logger from '../logger.js';
 
@@ -95,6 +96,9 @@ router.get('/config', requireAdmin, (_req: Request, res: Response) => {
   if (!config.HA_URL || config.HA_URL === 'http://localhost:8123') missing.push('HA_URL');
   if (!config.HA_TOKEN) missing.push('HA_TOKEN');
 
+  // Port is locked when set externally (env var or CLI) — UI should show a note
+  const portLocked = !!(process.env.PORT || cliPortOverride);
+
   res.json({
     success: true,
     config: {
@@ -104,6 +108,8 @@ router.get('/config', requireAdmin, (_req: Request, res: Response) => {
       LOG_LEVEL: config.LOG_LEVEL,
       ALLOWED_ENTITIES: config.ALLOWED_ENTITIES.join(', '),
     },
+    portLocked,
+    portLockedBy: process.env.PORT ? 'environment variable PORT' : cliPortOverride ? 'CLI --port flag' : null,
     missing,
   });
 });
@@ -132,12 +138,46 @@ router.post('/config', requireAdmin, (req: Request, res: Response) => {
   }
 });
 
+/**
+ * Detect if a supervisor (systemd, Docker, pm2) is managing this process.
+ * In those cases a plain process.exit() is enough — the supervisor restarts us.
+ * When running standalone (direct `node` / `npm start`) we self-spawn first so
+ * the server comes back up without a process manager.
+ */
+function hasSupervisor(): boolean {
+  // systemd sets INVOCATION_ID and/or NOTIFY_SOCKET
+  if (process.env.INVOCATION_ID || process.env.NOTIFY_SOCKET) return true;
+  // Docker sets a /.dockerenv file (present inside every Docker container)
+  try {
+    const { existsSync } = require('fs') as typeof import('fs');
+    if (existsSync('/.dockerenv')) return true;
+  } catch { /* ignore */ }
+  // pm2 sets PM2_HOME or pm_id
+  if (process.env.PM2_HOME || process.env.pm_id) return true;
+  return false;
+}
+
 // Restart server
 router.post('/restart', requireAdmin, (_req: Request, res: Response) => {
   res.json({ success: true, message: 'Server restarting...' });
   setTimeout(() => {
     logger.info('Restarting server due to admin request...');
-    process.exit(0);
+    if (hasSupervisor()) {
+      // Supervised (systemd / Docker / pm2) — just exit; supervisor brings us back
+      logger.info('Supervised environment detected — exiting for supervisor restart');
+      process.exit(0);
+    } else {
+      // Standalone — spawn a detached replacement before exiting
+      logger.info('Standalone environment — self-spawning replacement process');
+      const child = spawn(process.execPath, [...process.execArgv, ...process.argv.slice(1)], {
+        detached: true,
+        stdio: 'inherit',
+        env: process.env,
+        cwd: process.cwd(),
+      });
+      child.unref();
+      setTimeout(() => process.exit(0), 300);
+    }
   }, 500);
 });
 

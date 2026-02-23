@@ -23,7 +23,7 @@ router.get('/status', (_req: Request, res: Response) => {
 
 // Perform setup: validate HA connection, save config, set admin password
 router.post('/configure', async (req: Request, res: Response) => {
-  const { haUrl, haToken, adminPassword } = req.body ?? {};
+  const { haUrl, haToken, adminPassword, port, logLevel } = req.body ?? {};
 
   if (!haUrl || !haToken) {
     res.status(400).json({ success: false, error: 'HA URL and token are required' });
@@ -54,13 +54,13 @@ router.post('/configure', async (req: Request, res: Response) => {
     return;
   }
 
-  // Save config to DB, preserving existing values for PORT/LOG_LEVEL
+  // Save config to DB, using provided values or preserving existing
   const existing = getConfig();
   const config: AppConfig = {
     HA_URL: haUrl,
     HA_TOKEN: haToken,
-    PORT: existing.PORT || 3000,
-    LOG_LEVEL: existing.LOG_LEVEL || 'INFO',
+    PORT: port ? Number(port) : (existing.PORT || 3000),
+    LOG_LEVEL: logLevel ? String(logLevel).toUpperCase() : (existing.LOG_LEVEL || 'INFO'),
     ALLOWED_ENTITIES: existing.ALLOWED_ENTITIES || [],
   };
   saveConfig(config);

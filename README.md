@@ -28,7 +28,7 @@ LobbyHA solves this by:
 
 ## Features
 
-- **Setup Wizard** — guided first-run configuration (HA URL, token, admin password, optional PIN)
+- **Setup Wizard** — guided first-run configuration (HA URL, token, admin password, optional PIN, optional port)
 - **Admin Dashboard** — discover entities, organize into areas, reorder, hide/unhide
 - **Guest Dashboard** — clean, read-only view for shared devices
 - **Guest PIN Access** — optionally require a PIN to view the guest dashboard (multiple PINs, permanent or 7-day sessions)
@@ -40,7 +40,8 @@ LobbyHA solves this by:
 - **SQLite Storage** — all configuration stored in a local database (no config files needed)
 - **WebSocket Proxy** — real-time entity state updates without exposing HA directly
 - **Secure Admin Auth** — PBKDF2 SHA-512 with 100k iterations, timing-safe comparison
-- **CLI Port Configuration** — set port via `--port` flag, env var, or admin UI
+- **Configurable Port** — set via `--port` CLI flag, `PORT` env var, Setup Wizard, or Admin Settings
+- **Server Restart Button** — restart the server from the Admin Settings panel (saves settings first)
 - **Docker Support** — multi-arch image published to GitHub Container Registry
 - **Service Install** — systemd (Linux) and launchd (macOS) service definitions included
 
@@ -260,7 +261,14 @@ Port is determined by (highest to lowest priority):
 
 ### Admin UI
 
-All settings (including port) can also be changed from the **Admin Dashboard → Settings** panel at `/admin`.
+All settings can be changed from the **Admin Dashboard → Settings** panel at `/admin`:
+
+- **Server Connection** — HA URL, token, Test Connection, Save Settings
+- **Guest PIN Access** — enable/disable PIN gate, manage PINs
+- **Advanced** — port, log level, allowed entities
+  - **Save Advanced** — saves advanced settings without requiring HA credentials
+  - **Save & Restart** — saves all settings then restarts the server; required for port changes to take effect
+  - If port is controlled by a `PORT` env var or `--port` CLI flag, the port field is disabled and shows a note — change it in your environment config instead.
 
 ---
 
@@ -270,8 +278,9 @@ All settings (including port) can also be changed from the **Admin Dashboard →
 2. Enter your **Home Assistant URL** (e.g., `http://homeassistant.local:8123`).
 3. Enter a **long-lived access token** from HA.
 4. Set an **admin password**.
-5. *(Optional)* Configure **guest PINs**.
-6. Done! You'll be redirected to the admin dashboard.
+5. *(Optional)* Expand **Advanced Settings** to change the default port.
+6. *(Optional)* Configure **guest PINs**.
+7. Done! You'll be redirected to the admin dashboard.
 
 ### Curate Your Dashboard
 

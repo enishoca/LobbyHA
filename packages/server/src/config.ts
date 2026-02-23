@@ -20,7 +20,7 @@ const DEFAULT_CONFIG: AppConfig = {
 };
 
 let cachedConfig: AppConfig | null = null;
-let cliPortOverride: number | null = null;
+export let cliPortOverride: number | null = null;
 
 /**
  * Set a CLI-provided port override. Takes highest priority over

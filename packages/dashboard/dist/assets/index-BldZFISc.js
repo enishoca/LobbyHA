@@ -1,0 +1,1 @@
+import{F as a,f as r}from"./EntityCard-CfYf4tip.js";import"./index-Bd1r4d6-.js";function s({entity:t,mapHeight:e,...o}){return a(r,{entity:t,mapHeight:e,...o})}export{s as ModalPersonControls,s as default};
