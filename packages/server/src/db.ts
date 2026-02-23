@@ -60,11 +60,16 @@ export async function initDb(dataDir: string): Promise<Database> {
     FOREIGN KEY (module_id) REFERENCES modules(id) ON DELETE CASCADE
   )`);
 
-  // Per-entity display property overrides (icon, name, etc.)
+  // Per-entity display property overrides (icon, name, modal visibility, etc.)
   db.run(`CREATE TABLE IF NOT EXISTS entity_display_props (
     entity_id TEXT PRIMARY KEY,
     custom_name TEXT,
-    custom_icon TEXT
+    custom_icon TEXT,
+    show_last_updated INTEGER DEFAULT 1,
+    hide_state INTEGER DEFAULT 0,
+    hide_updated INTEGER DEFAULT 0,
+    hide_attributes INTEGER DEFAULT 1,
+    hide_logbook INTEGER DEFAULT 1
   )`);
 
   persistDb();
@@ -249,35 +254,68 @@ export interface EntityDisplayProps {
   entity_id: string;
   custom_name?: string | null;
   custom_icon?: string | null;
+  show_last_updated?: boolean;
+  hide_state?: boolean;
+  hide_updated?: boolean;
+  hide_attributes?: boolean;
+  hide_logbook?: boolean;
 }
 
 export function readEntityDisplayProps(entityId: string): EntityDisplayProps | null {
   const result = getDb().exec(
-    "SELECT entity_id, custom_name, custom_icon FROM entity_display_props WHERE entity_id = ?",
+    "SELECT entity_id, custom_name, custom_icon, show_last_updated, hide_state, hide_updated, hide_attributes, hide_logbook FROM entity_display_props WHERE entity_id = ?",
     [entityId],
   );
   if (!result.length || !result[0].values.length) return null;
-  const [eid, name, icon] = result[0].values[0] as [string, string | null, string | null];
-  return { entity_id: eid, custom_name: name, custom_icon: icon };
+  const row = result[0].values[0];
+  return {
+    entity_id: row[0] as string,
+    custom_name: row[1] as string | null,
+    custom_icon: row[2] as string | null,
+    show_last_updated: (row[3] as number ?? 1) === 1,
+    hide_state: (row[4] as number ?? 0) === 1,
+    hide_updated: (row[5] as number ?? 0) === 1,
+    hide_attributes: (row[6] as number ?? 0) === 1,
+    hide_logbook: (row[7] as number ?? 0) === 1,
+  };
 }
 
 export function readAllEntityDisplayProps(): EntityDisplayProps[] {
-  const result = getDb().exec("SELECT entity_id, custom_name, custom_icon FROM entity_display_props");
+  const result = getDb().exec("SELECT entity_id, custom_name, custom_icon, show_last_updated, hide_state, hide_updated, hide_attributes, hide_logbook FROM entity_display_props");
   if (!result.length) return [];
   return result[0].values.map(row => ({
     entity_id: row[0] as string,
     custom_name: row[1] as string | null,
     custom_icon: row[2] as string | null,
+    show_last_updated: (row[3] as number ?? 1) === 1,
+    hide_state: (row[4] as number ?? 0) === 1,
+    hide_updated: (row[5] as number ?? 0) === 1,
+    hide_attributes: (row[6] as number ?? 0) === 1,
+    hide_logbook: (row[7] as number ?? 0) === 1,
   }));
 }
 
-export function saveEntityDisplayProps(entityId: string, props: { custom_name?: string | null; custom_icon?: string | null }): void {
+export function saveEntityDisplayProps(entityId: string, props: {
+  custom_name?: string | null;
+  custom_icon?: string | null;
+  show_last_updated?: boolean;
+  hide_state?: boolean;
+  hide_updated?: boolean;
+  hide_attributes?: boolean;
+  hide_logbook?: boolean;
+}): void {
   const d = getDb();
+  const slu = props.show_last_updated === undefined ? 1 : (props.show_last_updated ? 1 : 0);
+  const hs = props.hide_state ? 1 : 0;
+  const hu = props.hide_updated ? 1 : 0;
+  const ha = props.hide_attributes ? 1 : 0;
+  const hl = props.hide_logbook ? 1 : 0;
   d.run(
-    `INSERT INTO entity_display_props (entity_id, custom_name, custom_icon)
-     VALUES (?, ?, ?)
-     ON CONFLICT(entity_id) DO UPDATE SET custom_name = ?, custom_icon = ?`,
-    [entityId, props.custom_name ?? null, props.custom_icon ?? null, props.custom_name ?? null, props.custom_icon ?? null],
+    `INSERT INTO entity_display_props (entity_id, custom_name, custom_icon, show_last_updated, hide_state, hide_updated, hide_attributes, hide_logbook)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+     ON CONFLICT(entity_id) DO UPDATE SET custom_name = ?, custom_icon = ?, show_last_updated = ?, hide_state = ?, hide_updated = ?, hide_attributes = ?, hide_logbook = ?`,
+    [entityId, props.custom_name ?? null, props.custom_icon ?? null, slu, hs, hu, ha, hl,
+     props.custom_name ?? null, props.custom_icon ?? null, slu, hs, hu, ha, hl],
   );
   persistDb();
 }
@@ -375,6 +413,11 @@ export function setAdminPassword(newPassword: string): void {
 
 // ─── Guest PIN Access ───────────────────────────────────────
 
+export interface GuestPin {
+  pin: string;
+  permanent: boolean;
+}
+
 export function isGuestPinEnabled(): boolean {
   return readSetting('GUEST_PIN_ENABLED') === 'true';
 }
@@ -383,23 +426,35 @@ export function setGuestPinEnabled(enabled: boolean): void {
   writeSetting('GUEST_PIN_ENABLED', enabled ? 'true' : 'false');
 }
 
-export function readGuestPins(): string[] {
+export function readGuestPins(): GuestPin[] {
   const raw = readSetting('GUEST_PINS');
   if (!raw) return [];
   try {
     const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
+    if (!Array.isArray(parsed)) return [];
+    // Support legacy format (plain strings) by upgrading to objects
+    return parsed.map((p: unknown) => {
+      if (typeof p === 'string') return { pin: p, permanent: false };
+      if (p && typeof p === 'object' && 'pin' in p) {
+        const obj = p as { pin: string; permanent?: boolean };
+        return { pin: String(obj.pin), permanent: obj.permanent === true };
+      }
+      return null;
+    }).filter((p): p is GuestPin => p !== null);
   } catch {
     return [];
   }
 }
 
-export function saveGuestPins(pins: string[]): void {
+export function saveGuestPins(pins: GuestPin[]): void {
   writeSetting('GUEST_PINS', JSON.stringify(pins));
 }
 
-export function verifyGuestPin(pin: string): boolean {
-  if (!isGuestPinEnabled()) return true; // PIN not required
+/**
+ * Verify a guest PIN. Returns the matched GuestPin object if valid, or null if invalid.
+ */
+export function verifyGuestPin(pin: string): GuestPin | null {
+  if (!isGuestPinEnabled()) return { pin, permanent: false };
   const pins = readGuestPins();
-  return pins.includes(pin);
+  return pins.find(p => p.pin === pin) ?? null;
 }

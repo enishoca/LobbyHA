@@ -78,7 +78,20 @@ router.post('/configure', async (req: Request, res: Response) => {
     setGuestPinEnabled(pinEnabled);
   }
   if (Array.isArray(pins)) {
-    const validPins = pins.map((p: unknown) => String(p).trim()).filter((p: string) => p.length > 0);
+    const validPins = pins
+      .map((p: unknown) => {
+        if (typeof p === 'string') {
+          const trimmed = p.trim();
+          return trimmed.length > 0 ? { pin: trimmed, permanent: false } : null;
+        }
+        if (p && typeof p === 'object' && 'pin' in p) {
+          const obj = p as { pin: string; permanent?: boolean };
+          const trimmed = String(obj.pin).trim();
+          return trimmed.length > 0 ? { pin: trimmed, permanent: obj.permanent === true } : null;
+        }
+        return null;
+      })
+      .filter((p): p is { pin: string; permanent: boolean } => p !== null);
     saveGuestPins(validPins);
     logger.info(`Setup: saved ${validPins.length} guest PIN(s), enabled=${pinEnabled}`);
   }

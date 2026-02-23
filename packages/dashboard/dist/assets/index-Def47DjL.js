@@ -1,0 +1,1 @@
+import{F as e,y as a,o as i}from"./EntityCard-BX5I8Eek.js";import"./index-dtVNt39M.js";function u({entity:t,...r}){return e(i,{fullWidth:!0,children:e(a,{entity:t,...r,disableScale:!0,disableRipples:!0,disableActiveState:!0,disableColumns:!0})})}export{u as ModalWeatherControls,u as default};

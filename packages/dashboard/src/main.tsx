@@ -6,8 +6,20 @@ import { GuestDashboard } from './guest/GuestDashboard';
 import { PinGate } from './guest/PinGate';
 import './index.css';
 
-/** In-memory guest session — cleared on page reload */
-let guestSessionId: string | null = null;
+const GUEST_SESSION_KEY = 'guestSessionId';
+
+/** Persisted guest session — survives page reloads (stored in localStorage) */
+let guestSessionId: string | null = localStorage.getItem(GUEST_SESSION_KEY);
+
+function saveGuestSession(sessionId: string) {
+  guestSessionId = sessionId;
+  localStorage.setItem(GUEST_SESSION_KEY, sessionId);
+}
+
+function clearGuestSession() {
+  guestSessionId = null;
+  localStorage.removeItem(GUEST_SESSION_KEY);
+}
 
 /** Wrapper to inject X-Guest-Session into all fetch requests */
 function patchFetchWithSession() {
@@ -27,21 +39,30 @@ function patchFetchWithSession() {
 /**
  * Guest entry point.
  * Checks PIN status, shows PIN gate if required, then connects via HassConnect.
+ * Session is persisted in localStorage so guests don't re-enter PIN on refresh.
  */
 async function boot() {
   const root = createRoot(document.getElementById('root')!);
 
+  // If we have a saved session, patch fetch first so the status check includes it
+  if (guestSessionId) {
+    patchFetchWithSession();
+  }
+
   try {
-    // Check if PIN is required
+    // Check if PIN is required (will include X-Guest-Session if we have one)
     const pinRes = await fetch('/api/guest/status');
     const pinData = await pinRes.json();
 
     if (pinData.pinEnabled && !pinData.authenticated) {
+      // Saved session was invalid or expired — clear it
+      clearGuestSession();
+
       // PIN is required and no valid session — show PIN gate
       root.render(
         <StrictMode>
           <PinGate onAuthenticated={(sessionId) => {
-            guestSessionId = sessionId;
+            saveGuestSession(sessionId);
             patchFetchWithSession();
             renderDashboard(root);
           }} />

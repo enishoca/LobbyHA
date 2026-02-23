@@ -113,6 +113,12 @@ router.get('/guest-modules', requireGuestPin, async (_req: Request, res: Respons
   res.json({ modules: visibleModules, title });
 });
 
+// ─── Guest entity display props (read-only, PIN protected) ──────────────
+
+router.get('/guest-entity-props', requireGuestPin, (_req: Request, res: Response) => {
+  res.json({ props: readAllEntityDisplayProps() });
+});
+
 // ─── Entity display props ───────────────────────────────────
 
 router.get('/entity-props', requireAdmin, (_req: Request, res: Response) => {
@@ -126,8 +132,16 @@ router.get('/entity-props/:entityId', requireAdmin, (req: Request, res: Response
 
 router.post('/entity-props/:entityId', requireAdmin, (req: Request, res: Response) => {
   const entityId = req.params.entityId;
-  const { custom_name, custom_icon } = req.body ?? {};
-  saveEntityDisplayProps(entityId, { custom_name: custom_name ?? null, custom_icon: custom_icon ?? null });
+  const { custom_name, custom_icon, show_last_updated, hide_state, hide_updated, hide_attributes, hide_logbook } = req.body ?? {};
+  saveEntityDisplayProps(entityId, {
+    custom_name: custom_name ?? null,
+    custom_icon: custom_icon ?? null,
+    show_last_updated: show_last_updated ?? true,
+    hide_state: hide_state ?? false,
+    hide_updated: hide_updated ?? false,
+    hide_attributes: hide_attributes ?? false,
+    hide_logbook: hide_logbook ?? false,
+  });
   res.json({ props: readEntityDisplayProps(entityId) });
 });
 

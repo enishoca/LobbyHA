@@ -9,19 +9,31 @@ export function GuestDashboard() {
   const [modules, setModules] = useState<Module[]>([]);
   const [title, setTitle] = useState('LobbyHA');
   const [loading, setLoading] = useState(true);
+  const [entityProps, setEntityProps] = useState<Record<string, {
+    custom_name?: string | null; custom_icon?: string | null;
+    show_last_updated?: boolean; hide_state?: boolean; hide_updated?: boolean;
+    hide_attributes?: boolean; hide_logbook?: boolean;
+  }>>({});
 
   useEffect(() => {
     let active = true;
 
     const load = async () => {
       try {
-        const [guestData, modulesData] = await Promise.all([
+        const [guestData, modulesData, propsData] = await Promise.all([
           apiFetch<{ title: string; entities: string[] }>('/api/ui/guest-entities'),
           apiFetch<{ modules: Module[] }>('/api/ui/guest-modules'),
+          apiFetch<{ props: Array<{ entity_id: string; custom_name?: string | null; custom_icon?: string | null; show_last_updated?: boolean; hide_state?: boolean; hide_updated?: boolean; hide_attributes?: boolean; hide_logbook?: boolean }> }>('/api/ui/guest-entity-props'),
         ]);
         if (!active) return;
         setTitle(guestData.title || 'LobbyHA');
         setModules(modulesData.modules);
+        // Build props lookup map
+        const propsMap: Record<string, { custom_name?: string | null; custom_icon?: string | null; show_last_updated?: boolean; hide_state?: boolean; hide_updated?: boolean; hide_attributes?: boolean; hide_logbook?: boolean }> = {};
+        for (const p of propsData.props) {
+          propsMap[p.entity_id] = p;
+        }
+        setEntityProps(propsMap);
       } catch {
         // guest degrades gracefully
       } finally {
@@ -60,6 +72,7 @@ export function GuestDashboard() {
               name={module.name}
               icon={module.icon}
               entityIds={module.entities}
+              entityProps={entityProps}
             />
           ))
         )}

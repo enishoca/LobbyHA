@@ -24,8 +24,9 @@ export function SettingsPanel({ sessionId, onClose, inline, onSaved }: SettingsP
 
   // PIN settings
   const [pinEnabled, setPinEnabled] = useState(false);
-  const [pins, setPins] = useState<string[]>([]);
+  const [pins, setPins] = useState<Array<{pin: string; permanent: boolean}>>([]);
   const [newPin, setNewPin] = useState('');
+  const [newPinPermanent, setNewPinPermanent] = useState(false);
   const [pinLoaded, setPinLoaded] = useState(false);
   const [pinSaving, setPinSaving] = useState(false);
 
@@ -53,7 +54,7 @@ export function SettingsPanel({ sessionId, onClose, inline, onSaved }: SettingsP
 
   // Load PIN settings
   if (!pinLoaded) {
-    apiFetch<{ pinEnabled: boolean; pins: string[] }>(
+    apiFetch<{ pinEnabled: boolean; pins: Array<{pin: string; permanent: boolean}> }>(
       '/api/guest/settings',
       { sessionId }
     ).then(data => {
@@ -124,10 +125,10 @@ export function SettingsPanel({ sessionId, onClose, inline, onSaved }: SettingsP
   };
 
   // PIN management
-  const savePinSettings = async (enabled: boolean, pinList: string[]) => {
+  const savePinSettings = async (enabled: boolean, pinList: Array<{pin: string; permanent: boolean}>) => {
     setPinSaving(true);
     try {
-      const data = await apiFetch<{ pinEnabled: boolean; pins: string[] }>(
+      const data = await apiFetch<{ pinEnabled: boolean; pins: Array<{pin: string; permanent: boolean}> }>(
         '/api/guest/settings',
         { method: 'POST', sessionId, body: JSON.stringify({ pinEnabled: enabled, pins: pinList }) }
       );
@@ -148,15 +149,22 @@ export function SettingsPanel({ sessionId, onClose, inline, onSaved }: SettingsP
 
   const handleAddPin = () => {
     const trimmed = newPin.trim();
-    if (!trimmed || pins.includes(trimmed)) return;
-    const next = [...pins, trimmed];
+    if (!trimmed || pins.some(p => p.pin === trimmed)) return;
+    const next = [...pins, { pin: trimmed, permanent: newPinPermanent }];
     setPins(next);
     setNewPin('');
+    setNewPinPermanent(false);
     savePinSettings(pinEnabled, next);
   };
 
   const handleRemovePin = (pin: string) => {
-    const next = pins.filter(p => p !== pin);
+    const next = pins.filter(p => p.pin !== pin);
+    setPins(next);
+    savePinSettings(pinEnabled, next);
+  };
+
+  const handleTogglePermanent = (pin: string) => {
+    const next = pins.map(p => p.pin === pin ? { ...p, permanent: !p.permanent } : p);
     setPins(next);
     savePinSettings(pinEnabled, next);
   };
@@ -196,9 +204,18 @@ export function SettingsPanel({ sessionId, onClose, inline, onSaved }: SettingsP
               {pins.length > 0 && (
                 <ul className="pin-list">
                   {pins.map(p => (
-                    <li key={p}>
-                      <span>{p}</span>
-                      <button type="button" onClick={() => handleRemovePin(p)} title="Remove PIN" disabled={pinSaving}>✕</button>
+                    <li key={p.pin}>
+                      <span>{p.pin}</span>
+                      <button
+                        type="button"
+                        className={`pin-badge ${p.permanent ? 'permanent' : 'expiring'}`}
+                        onClick={() => handleTogglePermanent(p.pin)}
+                        title={p.permanent ? 'Click to make expiring (7 days)' : 'Click to make permanent'}
+                        disabled={pinSaving}
+                      >
+                        {p.permanent ? 'permanent' : '7-day'}
+                      </button>
+                      <button type="button" onClick={() => handleRemovePin(p.pin)} title="Remove PIN" disabled={pinSaving}>✕</button>
                     </li>
                   ))}
                 </ul>
@@ -212,6 +229,10 @@ export function SettingsPanel({ sessionId, onClose, inline, onSaved }: SettingsP
                   placeholder="Enter new PIN"
                   disabled={pinSaving}
                 />
+                <label className="pin-permanent-toggle" title="Permanent PINs never expire">
+                  <input type="checkbox" checked={newPinPermanent} onChange={e => setNewPinPermanent(e.target.checked)} disabled={pinSaving} />
+                  <span>Permanent</span>
+                </label>
                 <button type="button" onClick={handleAddPin} disabled={pinSaving || !newPin.trim()}>
                   Add
                 </button>

@@ -34,8 +34,12 @@ export function AdminDashboard({ sessionId, hassUrl, hassToken, onLogout }: Admi
   const [showSettingsMenu, setShowSettingsMenu] = useState(false);
   const [showPasswordChange, setShowPasswordChange] = useState(false);
 
-  // Entity display props (custom icon/name overrides)
-  const [entityProps, setEntityProps] = useState<Record<string, { custom_name?: string | null; custom_icon?: string | null }>>({});
+  // Entity display props (custom icon/name/display overrides)
+  const [entityProps, setEntityProps] = useState<Record<string, {
+    custom_name?: string | null; custom_icon?: string | null;
+    show_last_updated?: boolean; hide_state?: boolean; hide_updated?: boolean;
+    hide_attributes?: boolean; hide_logbook?: boolean;
+  }>>({});
   const [editingEntityId, setEditingEntityId] = useState<string | null>(null);
   const [editingAnchorRect, setEditingAnchorRect] = useState<DOMRect | null>(null);
 
@@ -58,15 +62,15 @@ export function AdminDashboard({ sessionId, hassUrl, hassToken, onLogout }: Admi
         apiFetch<{ modules: Module[] }>('/api/ui/modules', { sessionId }),
         apiFetch<{ hidden: string[] }>('/api/ui/hidden', { sessionId }),
         apiFetch<{ title: string }>('/api/ui/guest-entities', { sessionId }),
-        apiFetch<{ props: Array<{ entity_id: string; custom_name?: string | null; custom_icon?: string | null }> }>('/api/ui/entity-props', { sessionId }),
+        apiFetch<{ props: Array<{ entity_id: string; custom_name?: string | null; custom_icon?: string | null; show_last_updated?: boolean; hide_state?: boolean; hide_updated?: boolean; hide_attributes?: boolean; hide_logbook?: boolean }> }>('/api/ui/entity-props', { sessionId }),
       ]);
       setModules(modulesData.modules);
       setHiddenIds(new Set(hiddenData.hidden));
       setDashboardTitle(guestData.title || 'LobbyHA');
       // Build props lookup map
-      const propsMap: Record<string, { custom_name?: string | null; custom_icon?: string | null }> = {};
+      const propsMap: Record<string, { custom_name?: string | null; custom_icon?: string | null; show_last_updated?: boolean; hide_state?: boolean; hide_updated?: boolean; hide_attributes?: boolean; hide_logbook?: boolean }> = {};
       for (const p of propsData.props) {
-        propsMap[p.entity_id] = { custom_name: p.custom_name, custom_icon: p.custom_icon };
+        propsMap[p.entity_id] = p;
       }
       setEntityProps(propsMap);
     } catch {
@@ -335,6 +339,11 @@ export function AdminDashboard({ sessionId, hassUrl, hassToken, onLogout }: Admi
                         onGearClick={(eid, rect) => { setEditingEntityId(eid); setEditingAnchorRect(rect); }}
                         customName={entityProps[entityId]?.custom_name}
                         customIcon={entityProps[entityId]?.custom_icon}
+                        showLastUpdated={entityProps[entityId]?.show_last_updated}
+                        hideState={entityProps[entityId]?.hide_state}
+                        hideUpdated={entityProps[entityId]?.hide_updated}
+                        hideAttributes={entityProps[entityId]?.hide_attributes}
+                        hideLogbook={entityProps[entityId]?.hide_logbook}
                       />
                       <div className="entity-admin-actions">
                         <button

@@ -1,11 +1,18 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { Icon, loadIcons, iconLoaded } from '@iconify/react';
 
 /**
  * IconPicker — Browsable MDI icon library with color-coded categories and search.
- * ~300 hand-picked icons across 15 categories using @iconify/react.
+ * ~300 hand-picked icons across 15 categories.
+ * Uses Iconify SVG API via <img> tags for reliable rendering (no JS API dependency).
  */
+
+/** Build an Iconify SVG API URL for an mdi icon */
+function iconSvgUrl(mdiIcon: string, colorHex: string): string {
+  const name = mdiIcon.replace('mdi:', '');
+  const color = encodeURIComponent(colorHex);
+  return `https://api.iconify.design/mdi/${name}.svg?color=${color}&height=24`;
+}
 
 interface IconCategory {
   label: string;
@@ -197,25 +204,6 @@ const ICON_CATEGORIES: IconCategory[] = [
 ];
 
 const ALL_ICONS = ICON_CATEGORIES.flatMap(cat => cat.icons.map(icon => ({ icon, color: cat.color, category: cat.label })));
-const ALL_ICON_NAMES = ALL_ICONS.map(i => i.icon);
-
-// Preload all icons once at module level — starts the API fetch immediately
-let iconsPreloaded = false;
-let iconsReady = false;
-const preloadListeners: Array<() => void> = [];
-
-function ensureIconsPreloaded() {
-  if (iconsPreloaded) return;
-  iconsPreloaded = true;
-  loadIcons(ALL_ICON_NAMES, (_loaded, _missing, _pending) => {
-    iconsReady = true;
-    for (const fn of preloadListeners) fn();
-    preloadListeners.length = 0;
-  });
-}
-
-// Start preloading right away
-ensureIconsPreloaded();
 
 interface IconPickerProps {
   value: string;
@@ -226,21 +214,9 @@ export function IconPicker({ value, onChange }: IconPickerProps) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
-  const [loaded, setLoaded] = useState(iconsReady);
   const btnRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const [pos, setPos] = useState({ top: 0, left: 0 });
-
-  // Track when icons finish loading
-  useEffect(() => {
-    if (iconsReady) { setLoaded(true); return; }
-    const handler = () => setLoaded(true);
-    preloadListeners.push(handler);
-    return () => {
-      const idx = preloadListeners.indexOf(handler);
-      if (idx >= 0) preloadListeners.splice(idx, 1);
-    };
-  }, []);
 
   // Position popup near trigger button
   useEffect(() => {
@@ -302,8 +278,6 @@ export function IconPicker({ value, onChange }: IconPickerProps) {
   }, [search, activeCategory]);
 
   const displayIcon = value || 'mdi:lightbulb';
-  // Only show trigger icon if it's loaded
-  const triggerLoaded = !value || iconLoaded(value);
 
   return (
     <>
@@ -314,11 +288,13 @@ export function IconPicker({ value, onChange }: IconPickerProps) {
         onClick={() => setOpen(!open)}
         title="Pick icon"
       >
-        {triggerLoaded ? (
-          <Icon icon={displayIcon} width={22} height={22} />
-        ) : (
-          <span style={{ width: 22, height: 22, display: 'inline-block', opacity: 0.3 }}>⚙</span>
-        )}
+        <img
+          src={iconSvgUrl(displayIcon, '#7da2ff')}
+          width={22}
+          height={22}
+          alt=""
+          style={{ display: 'block' }}
+        />
       </button>
 
       {open && createPortal(
@@ -364,30 +340,26 @@ export function IconPicker({ value, onChange }: IconPickerProps) {
 
           {/* Icon grid */}
           <div className="icon-picker-grid">
-            {!loaded ? (
-              <p className="icon-picker-empty">Loading icons...</p>
-            ) : (
-              <>
-                {filteredIcons.map((item, i) => (
-                  <button
-                    key={`${item.icon}-${i}`}
-                    type="button"
-                    className={`icon-picker-item${item.icon === value ? ' selected' : ''}`}
-                    onClick={() => { onChange(item.icon); setOpen(false); }}
-                    title={item.icon.replace('mdi:', '').replace(/-/g, ' ')}
-                    style={{ color: item.color }}
-                  >
-                    {iconLoaded(item.icon) ? (
-                      <Icon icon={item.icon} width={24} height={24} />
-                    ) : (
-                      <span style={{ width: 24, height: 24, display: 'inline-block', borderRadius: 4, background: 'rgba(255,255,255,0.05)' }} />
-                    )}
-                  </button>
-                ))}
-                {filteredIcons.length === 0 && (
-                  <p className="icon-picker-empty">No icons match "{search}"</p>
-                )}
-              </>
+            {filteredIcons.map((item, i) => (
+              <button
+                key={`${item.icon}-${i}`}
+                type="button"
+                className={`icon-picker-item${item.icon === value ? ' selected' : ''}`}
+                onClick={() => { onChange(item.icon); setOpen(false); }}
+                title={item.icon.replace('mdi:', '').replace(/-/g, ' ')}
+              >
+                <img
+                  src={iconSvgUrl(item.icon, item.color)}
+                  width={24}
+                  height={24}
+                  alt={item.icon.replace('mdi:', '')}
+                  loading="lazy"
+                  style={{ display: 'block' }}
+                />
+              </button>
+            ))}
+            {filteredIcons.length === 0 && (
+              <p className="icon-picker-empty">No icons match "{search}"</p>
             )}
           </div>
         </div>,

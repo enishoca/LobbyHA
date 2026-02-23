@@ -35,11 +35,22 @@ interface EntityCardProps {
   customName?: string | null;
   /** Custom icon override (mdi:xxx) */
   customIcon?: string | null;
+  /** Show last updated on card row @default true */
+  showLastUpdated?: boolean;
+  /** Hide state in detail dialog */
+  hideState?: boolean;
+  /** Hide last updated in detail dialog */
+  hideUpdated?: boolean;
+  /** Hide attributes in detail dialog */
+  hideAttributes?: boolean;
+  /** Hide logbook in detail dialog */
+  hideLogbook?: boolean;
 }
 
 export function EntityCard({
   entityId, showActions, onHide, onGearClick, className, showAttributes,
   customName, customIcon,
+  showLastUpdated = true, hideState, hideUpdated, hideAttributes, hideLogbook,
 }: EntityCardProps) {
   const entities = useHass((state: { entities?: Record<string, HaEntity> }) => state.entities);
   const [, setIconTick] = useState(0);
@@ -76,18 +87,14 @@ export function EntityCard({
       }
     : undefined;
 
-  // Modal restrictions — show attributes in admin, hide in guest
-  const modalPropsExtra = showAttributes
-    ? {
-        hideLogbook: false,
-        hideDeviceSettings: true,
-        hideAttributes: false,
-      }
-    : {
-        hideLogbook: true,
-        hideDeviceSettings: true,
-        hideAttributes: true,
-      };
+  // Modal restrictions — merge admin/guest defaults with per-entity overrides
+  const modalPropsExtra = {
+    hideLogbook: hideLogbook ?? (showAttributes ? false : true),
+    hideDeviceSettings: true,
+    hideAttributes: hideAttributes ?? (showAttributes ? false : true),
+    hideState: hideState ?? false,
+    hideUpdated: hideUpdated ?? false,
+  };
 
   const cardClasses = [
     'entity-card',
@@ -120,22 +127,15 @@ export function EntityCard({
           </button>
         </div>
       )}
-      {/* Custom icon overlay */}
-      {customIcon && iconLoaded(customIcon) && (
-        <div className="entity-custom-icon">
-          <Icon icon={customIcon} width={20} height={20} />
-        </div>
-      )}
       <EntitiesCardRow
         entity={entityId as EntityName}
-        includeLastUpdated
+        includeLastUpdated={showLastUpdated}
         renderState={renderState}
-        // @ts-expect-error modalProps includes UI flags not in HAKit's public types
+        {...(customIcon ? { icon: customIcon, iconProps: { width: 28, height: 28 } } : {})}
+        {...(customName ? { name: customName } : {})}
+        // @ts-ignore modalProps includes UI flags not in HAKit's public types
         modalProps={modalPropsExtra}
       />
-      {customName && (
-        <div className="entity-custom-name">{customName}</div>
-      )}
     </div>
   );
 }

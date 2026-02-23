@@ -24,8 +24,9 @@ export function SetupWizard({ existingConfig, reconfigure }: SetupWizardProps = 
 
   // PIN settings
   const [pinEnabled, setPinEnabled] = useState(false);
-  const [pins, setPins] = useState<string[]>([]);
+  const [pins, setPins] = useState<Array<{pin: string; permanent: boolean}>>([]);
   const [newPin, setNewPin] = useState('');
+  const [newPinPermanent, setNewPinPermanent] = useState(false);
 
   // Pre-fill from existing config
   useEffect(() => {
@@ -303,9 +304,11 @@ export function SetupWizard({ existingConfig, reconfigure }: SetupWizardProps = 
                   {pins.length > 0 && (
                     <ul className="pin-list" style={{ marginBottom: '0.75rem' }}>
                       {pins.map(p => (
-                        <li key={p}>
-                          <span>{p}</span>
-                          <button type="button" onClick={() => setPins(pins.filter(x => x !== p))}>✕</button>
+                        <li key={p.pin}>
+                          <span>{p.pin}</span>
+                          {p.permanent && <span className="pin-badge permanent">permanent</span>}
+                          {!p.permanent && <span className="pin-badge expiring">7-day</span>}
+                          <button type="button" onClick={() => setPins(pins.filter(x => x.pin !== p.pin))}>✕</button>
                         </li>
                       ))}
                     </ul>
@@ -316,16 +319,21 @@ export function SetupWizard({ existingConfig, reconfigure }: SetupWizardProps = 
                       onChange={e => setNewPin(e.target.value)}
                       onKeyDown={e => {
                         if (e.key === 'Enter' && newPin.trim()) {
-                          setPins([...pins, newPin.trim()]);
+                          setPins([...pins, { pin: newPin.trim(), permanent: newPinPermanent }]);
                           setNewPin('');
+                          setNewPinPermanent(false);
                         }
                       }}
                       placeholder="Enter a PIN (e.g. 1234)"
                       autoFocus
                     />
+                    <label className="pin-permanent-toggle" title="Permanent PINs never expire">
+                      <input type="checkbox" checked={newPinPermanent} onChange={e => setNewPinPermanent(e.target.checked)} />
+                      <span>Permanent</span>
+                    </label>
                     <button
                       type="button"
-                      onClick={() => { if (newPin.trim()) { setPins([...pins, newPin.trim()]); setNewPin(''); } }}
+                      onClick={() => { if (newPin.trim()) { setPins([...pins, { pin: newPin.trim(), permanent: newPinPermanent }]); setNewPin(''); setNewPinPermanent(false); } }}
                       disabled={!newPin.trim()}
                     >
                       Add
@@ -338,7 +346,7 @@ export function SetupWizard({ existingConfig, reconfigure }: SetupWizardProps = 
                   )}
                   {pins.length > 0 && (
                     <p className="note" style={{ fontSize: '0.82rem', color: '#8a9bc0' }}>
-                      💡 You can add multiple PINs — e.g. one per guest or group. Sessions last 7 days.
+                      💡 You can add multiple PINs — e.g. one per guest or group. Non-permanent PINs expire after 7 days.
                     </p>
                   )}
                 </>

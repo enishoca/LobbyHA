@@ -14,6 +14,11 @@ interface EntityDisplayProps {
   entity_id: string;
   custom_name?: string | null;
   custom_icon?: string | null;
+  show_last_updated?: boolean;
+  hide_state?: boolean;
+  hide_updated?: boolean;
+  hide_attributes?: boolean;
+  hide_logbook?: boolean;
 }
 
 interface EntityPropEditorProps {
@@ -37,6 +42,11 @@ export function EntityPropEditor({
 }: EntityPropEditorProps) {
   const [customName, setCustomName] = useState('');
   const [customIcon, setCustomIcon] = useState('');
+  const [showLastUpdated, setShowLastUpdated] = useState(true);
+  const [hideState, setHideState] = useState(false);
+  const [hideUpdated, setHideUpdated] = useState(false);
+  const [hideAttributes, setHideAttributes] = useState(true);
+  const [hideLogbook, setHideLogbook] = useState(true);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [, setIconTick] = useState(0);
@@ -58,6 +68,11 @@ export function EntityPropEditor({
         );
         setCustomName(data.props.custom_name || '');
         setCustomIcon(data.props.custom_icon || '');
+        setShowLastUpdated(data.props.show_last_updated !== false);
+        setHideState(data.props.hide_state === true);
+        setHideUpdated(data.props.hide_updated === true);
+        setHideAttributes(data.props.hide_attributes === true);
+        setHideLogbook(data.props.hide_logbook === true);
       } catch {
         // Use defaults
       } finally {
@@ -75,6 +90,11 @@ export function EntityPropEditor({
         body: JSON.stringify({
           custom_name: customName.trim() || null,
           custom_icon: customIcon || null,
+          show_last_updated: showLastUpdated,
+          hide_state: hideState,
+          hide_updated: hideUpdated,
+          hide_attributes: hideAttributes,
+          hide_logbook: hideLogbook,
         }),
       });
       onSave();
@@ -84,7 +104,7 @@ export function EntityPropEditor({
     } finally {
       setSaving(false);
     }
-  }, [entityId, sessionId, customName, customIcon, onSave, onClose]);
+  }, [entityId, sessionId, customName, customIcon, showLastUpdated, hideState, hideUpdated, hideAttributes, hideLogbook, onSave, onClose]);
 
   const handleReset = useCallback(async () => {
     try {
@@ -94,6 +114,11 @@ export function EntityPropEditor({
       });
       setCustomName('');
       setCustomIcon('');
+      setShowLastUpdated(true);
+      setHideState(false);
+      setHideUpdated(false);
+      setHideAttributes(true);
+      setHideLogbook(true);
       onSave();
       onClose();
     } catch (err) {
@@ -102,8 +127,8 @@ export function EntityPropEditor({
   }, [entityId, sessionId, onSave, onClose]);
 
   // Calculate position — appear below the anchor, but stay in viewport
-  const panelWidth = 320;
-  const panelHeight = 260;
+  const panelWidth = 340;
+  const panelHeight = 440;
   let top = anchorRect.bottom + 8;
   let left = anchorRect.left - panelWidth / 2 + anchorRect.width / 2;
   if (left + panelWidth > window.innerWidth - 8) left = window.innerWidth - panelWidth - 8;
@@ -157,6 +182,34 @@ export function EntityPropEditor({
                   placeholder={friendlyName}
                   className="entity-prop-input"
                 />
+              </div>
+
+              {/* Card display toggles */}
+              <div className="entity-prop-section-label">Card Display</div>
+
+              <div className="entity-prop-toggle-row">
+                <label htmlFor={`slu-${entityId}`}>Show last updated</label>
+                <input id={`slu-${entityId}`} type="checkbox" checked={showLastUpdated} onChange={e => setShowLastUpdated(e.target.checked)} />
+              </div>
+
+              {/* Detail dialog toggles */}
+              <div className="entity-prop-section-label">Detail Dialog</div>
+
+              <div className="entity-prop-toggle-row">
+                <label htmlFor={`hs-${entityId}`}>Hide state</label>
+                <input id={`hs-${entityId}`} type="checkbox" checked={hideState} onChange={e => setHideState(e.target.checked)} />
+              </div>
+              <div className="entity-prop-toggle-row">
+                <label htmlFor={`hu-${entityId}`}>Hide last updated</label>
+                <input id={`hu-${entityId}`} type="checkbox" checked={hideUpdated} onChange={e => setHideUpdated(e.target.checked)} />
+              </div>
+              <div className="entity-prop-toggle-row">
+                <label htmlFor={`ha-${entityId}`}>Hide attributes</label>
+                <input id={`ha-${entityId}`} type="checkbox" checked={hideAttributes} onChange={e => setHideAttributes(e.target.checked)} />
+              </div>
+              <div className="entity-prop-toggle-row">
+                <label htmlFor={`hl-${entityId}`}>Hide logbook</label>
+                <input id={`hl-${entityId}`} type="checkbox" checked={hideLogbook} onChange={e => setHideLogbook(e.target.checked)} />
               </div>
             </div>
 

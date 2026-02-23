@@ -8,6 +8,14 @@ interface AreaCardProps {
   defaultExpanded?: boolean;
   showEntityActions?: boolean;
   onHideEntity?: (entityId: string) => void;
+  /** Called when gear icon clicked — receives entity id and button rect */
+  onGearClick?: (entityId: string, rect: DOMRect) => void;
+  /** Map of entity display props (custom name/icon/display flags) */
+  entityProps?: Record<string, {
+    custom_name?: string | null; custom_icon?: string | null;
+    show_last_updated?: boolean; hide_state?: boolean; hide_updated?: boolean;
+    hide_attributes?: boolean; hide_logbook?: boolean;
+  }>;
 }
 
 export function AreaCard({
@@ -17,6 +25,8 @@ export function AreaCard({
   defaultExpanded = true,
   showEntityActions = false,
   onHideEntity,
+  onGearClick,
+  entityProps,
 }: AreaCardProps) {
   const [expanded, setExpanded] = useState(defaultExpanded);
 
@@ -48,6 +58,14 @@ export function AreaCard({
               entityId={entityId}
               showActions={showEntityActions}
               onHide={onHideEntity}
+              onGearClick={onGearClick}
+              customName={entityProps?.[entityId]?.custom_name}
+              customIcon={entityProps?.[entityId]?.custom_icon}
+              showLastUpdated={entityProps?.[entityId]?.show_last_updated}
+              hideState={entityProps?.[entityId]?.hide_state}
+              hideUpdated={entityProps?.[entityId]?.hide_updated}
+              hideAttributes={entityProps?.[entityId]?.hide_attributes}
+              hideLogbook={entityProps?.[entityId]?.hide_logbook}
             />
           ))}
         </div>

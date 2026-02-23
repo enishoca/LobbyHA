@@ -1,5 +1,5 @@
 import { Router, type Request, type Response } from 'express';
-import { isGuestPinEnabled, readGuestPins, saveGuestPins, verifyGuestPin, setGuestPinEnabled } from '../db.js';
+import { isGuestPinEnabled, readGuestPins, saveGuestPins, verifyGuestPin, setGuestPinEnabled, type GuestPin } from '../db.js';
 import { createGuestSession, hasGuestSession } from '../middleware/guest-auth.js';
 import { requireAdmin } from '../middleware/admin-auth.js';
 import logger from '../logger.js';
@@ -26,7 +26,7 @@ router.post('/verify-pin', (req: Request, res: Response) => {
 
   if (!isGuestPinEnabled()) {
     // PIN not required — create session anyway for consistency
-    const sessionId = createGuestSession();
+    const sessionId = createGuestSession(false);
     res.json({ success: true, guestSessionId: sessionId });
     return;
   }
@@ -36,9 +36,10 @@ router.post('/verify-pin', (req: Request, res: Response) => {
     return;
   }
 
-  if (verifyGuestPin(pin)) {
-    const sessionId = createGuestSession();
-    logger.info('Guest PIN verified successfully');
+  const matched = verifyGuestPin(pin);
+  if (matched) {
+    const sessionId = createGuestSession(matched.permanent);
+    logger.info(`Guest PIN verified successfully (permanent=${matched.permanent})`);
     res.json({ success: true, guestSessionId: sessionId });
   } else {
     logger.warn('Guest PIN verification failed');
@@ -75,10 +76,21 @@ router.post('/settings', requireAdmin, (req: Request, res: Response) => {
   }
 
   if (Array.isArray(pins)) {
-    // Validate: all pins must be non-empty strings
-    const validPins = pins
-      .map((p: unknown) => String(p).trim())
-      .filter((p: string) => p.length > 0);
+    // Support both legacy plain strings and new {pin, permanent} objects
+    const validPins: GuestPin[] = pins
+      .map((p: unknown): GuestPin | null => {
+        if (typeof p === 'string') {
+          const trimmed = p.trim();
+          return trimmed.length > 0 ? { pin: trimmed, permanent: false } : null;
+        }
+        if (p && typeof p === 'object' && 'pin' in p) {
+          const obj = p as { pin: string; permanent?: boolean };
+          const trimmed = String(obj.pin).trim();
+          return trimmed.length > 0 ? { pin: trimmed, permanent: obj.permanent === true } : null;
+        }
+        return null;
+      })
+      .filter((p): p is GuestPin => p !== null);
     saveGuestPins(validPins);
   }
 

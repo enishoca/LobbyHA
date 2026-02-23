@@ -3,21 +3,23 @@ import crypto from 'crypto';
 import { isGuestPinEnabled } from '../db.js';
 
 // In-memory guest session store (resets on restart — by design)
-const guestSessions = new Map<string, { created: number }>();
+const guestSessions = new Map<string, { created: number; permanent: boolean }>();
 
-// Session TTL: 7 days
+// Session TTL: 7 days (only for non-permanent sessions)
 const SESSION_TTL = 7 * 24 * 60 * 60 * 1000;
 
-export function createGuestSession(): string {
+export function createGuestSession(permanent: boolean = false): string {
   const sessionId = crypto.randomBytes(32).toString('hex');
-  guestSessions.set(sessionId, { created: Date.now() });
+  guestSessions.set(sessionId, { created: Date.now(), permanent });
   return sessionId;
 }
 
 export function hasGuestSession(sessionId: string): boolean {
   const session = guestSessions.get(sessionId);
   if (!session) return false;
-  // Check TTL
+  // Permanent sessions never expire (until server restart)
+  if (session.permanent) return true;
+  // Check TTL for non-permanent sessions
   if (Date.now() - session.created > SESSION_TTL) {
     guestSessions.delete(sessionId);
     return false;

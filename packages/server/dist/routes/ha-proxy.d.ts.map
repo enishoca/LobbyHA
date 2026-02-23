@@ -1,0 +1,1 @@
+{"version":3,"file":"ha-proxy.d.ts","sourceRoot":"","sources":["../../src/routes/ha-proxy.ts"],"names":[],"mappings":"AAIA,QAAA,MAAM,MAAM,4CAAW,CAAC;AAExB,iBAAe,OAAO,CAAC,IAAI,EAAE,MAAM,EAAE,OAAO,GAAE,WAAgB,GAAG,OAAO,CAAC;IAAE,MAAM,EAAE,MAAM,CAAC;IAAC,IAAI,EAAE,MAAM,CAAA;CAAE,CAAC,CAYzG;AA2ED,eAAe,MAAM,CAAC;AACtB,OAAO,EAAE,OAAO,EAAE,CAAC"}

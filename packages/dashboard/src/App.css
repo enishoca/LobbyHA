@@ -1249,28 +1249,57 @@ button:focus-visible { outline: 2px solid #7da2ff; outline-offset: 2px; }
   font-weight: 600;
 }
 
-/* ─── Entity custom overlays ─────────────────────────────── */
-
-.entity-custom-icon {
-  position: absolute;
-  top: 0.45rem;
-  right: 0.5rem;
-  z-index: 4;
-  opacity: 0.8;
-  pointer-events: none;
+.pin-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.7rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 0.3rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  border: 1px dashed transparent;
+  line-height: 1;
+  transition: border-color 0.15s, opacity 0.15s;
+}
+.pin-badge::after {
+  content: '⇄';
+  font-size: 0.65rem;
+  opacity: 0.4;
+}
+.pin-badge:hover {
+  border-color: currentColor;
+  opacity: 0.85;
+}
+.pin-badge:hover::after {
+  opacity: 1;
+}
+.pin-badge.permanent {
+  background: rgba(76, 175, 80, 0.25);
+  color: #66bb6a;
+}
+.pin-badge.expiring {
+  background: rgba(255, 183, 77, 0.2);
+  color: #ffb74d;
+}
+.pin-list li .pin-badge {
+  margin-left: 0.5rem;
 }
 
-.entity-custom-name {
-  position: absolute;
-  bottom: 0.3rem;
-  left: 0.5rem;
-  right: 0.5rem;
-  font-size: 0.7rem;
-  color: #7da2ff;
-  overflow: hidden;
-  text-overflow: ellipsis;
+.pin-permanent-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.8rem;
+  color: #8a9bc0;
+  cursor: pointer;
   white-space: nowrap;
-  pointer-events: none;
+}
+.pin-permanent-toggle input[type="checkbox"] {
+  margin: 0;
+  accent-color: #66bb6a;
 }
 
 /* ─── Emoji Picker ───────────────────────────────────────── */
@@ -1501,6 +1530,8 @@ button:focus-visible { outline: 2px solid #7da2ff; outline-offset: 2px; }
   display: flex;
   flex-direction: column;
   gap: 0.6rem;
+  max-height: 360px;
+  overflow-y: auto;
 }
 
 .entity-prop-field label {
@@ -1542,6 +1573,36 @@ button:focus-visible { outline: 2px solid #7da2ff; outline-offset: 2px; }
   font-size: 0.85rem;
 }
 .entity-prop-input:focus { border-color: var(--accent-blue); outline: none; }
+
+.entity-prop-section-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #7da2ff;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-top: 0.6rem;
+  margin-bottom: 0.2rem;
+  padding-bottom: 0.15rem;
+  border-bottom: 1px solid rgba(125, 162, 255, 0.12);
+}
+
+.entity-prop-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.25rem 0;
+}
+.entity-prop-toggle-row label {
+  font-size: 0.8rem;
+  color: #c8d6f0;
+  cursor: pointer;
+}
+.entity-prop-toggle-row input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--accent-blue);
+  cursor: pointer;
+}
 
 .entity-prop-actions {
   display: flex;
