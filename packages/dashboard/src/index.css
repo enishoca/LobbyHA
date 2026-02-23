@@ -1,0 +1,110 @@
+/* Dark theme */
+:root {
+  --bg-primary: #0b1020;
+  --bg-secondary: #121827;
+  --bg-card: linear-gradient(180deg, #161c2a 0%, #121827 100%);
+  --bg-entity: linear-gradient(180deg, #1a2238 0%, #141821 100%);
+  --bg-button: linear-gradient(180deg, #1a2238 0%, #111625 100%);
+  --bg-button-hover: linear-gradient(180deg, #243050 0%, #1a2238 100%);
+
+  --border-primary: #2a3242;
+  --border-hover: #3a4a65;
+  --border-button-hover: #3a4560;
+
+  --text-primary: rgba(255, 255, 255, 0.92);
+  --text-secondary: rgba(255, 255, 255, 0.87);
+  --text-muted: #9aa3b2;
+  --text-heading: #c8d4f0;
+
+  --accent-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+  --accent-blue: #7da2ff;
+  --accent-glow: rgba(125, 162, 255, 0.3);
+
+  --status-connected-bg: linear-gradient(135deg, #1f7a4d 0%, #155a38 100%);
+  --status-connected-text: #d4ffe8;
+  --status-connected-glow: rgba(31, 122, 77, 0.3);
+  --status-error-bg: linear-gradient(135deg, #a11b1b 0%, #7a1414 100%);
+  --status-error-text: #ffd4d4;
+  --status-error-glow: rgba(161, 27, 27, 0.3);
+  --status-disconnected-bg: #5a5a5a;
+  --status-disconnected-text: #f5f5f5;
+
+  --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.25);
+  --shadow-button: 0 2px 8px rgba(0, 0, 0, 0.2);
+
+  --modal-backdrop: rgba(5, 8, 16, 0.35);
+
+  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  color-scheme: dark;
+  color: var(--text-secondary);
+  background-color: var(--bg-primary);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+a {
+  font-weight: 500;
+  color: #646cff;
+  text-decoration: inherit;
+}
+a:hover { color: #535bf2; }
+
+html, body {
+  min-height: 100%;
+  margin: 0;
+}
+
+body {
+  min-width: 320px;
+  min-height: 100vh;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+/* Force HAKit modals to cover viewport */
+[class*="ModalBackdrop"] {
+  position: fixed !important;
+  inset: 0 !important;
+  backdrop-filter: none !important;
+  background: var(--modal-backdrop) !important;
+}
+
+[class*="ModalContainer"] {
+  position: fixed !important;
+  top: 50% !important;
+  left: 50% !important;
+  margin-left: 0 !important;
+  transform: translate(-50%, -50%) !important;
+  max-height: calc(100vh - 4rem) !important;
+}
+
+h1 {
+  font-size: 3.2em;
+  line-height: 1.1;
+}
+
+button {
+  border-radius: 8px;
+  border: 1px solid transparent;
+  padding: 0.6em 1.2em;
+  font-size: 1em;
+  font-weight: 500;
+  font-family: inherit;
+  background-color: #1a1a1a;
+  cursor: pointer;
+  transition: border-color 0.25s;
+}
+button:hover { border-color: #646cff; }
+button:focus, button:focus-visible {
+  outline: 4px auto -webkit-focus-ring-color;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: #0d1320; border-radius: 4px; }
+::-webkit-scrollbar-thumb { background: #2a3242; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #3a4a65; }

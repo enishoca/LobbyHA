@@ -1,0 +1,20 @@
+node_modules/
+
+# Ignore local env files
+packages/proxy/.env
+packages/web/.env
+.env
+
+# runtime artifacts
+run/
+
+# persistent data directory (local and add-on /data)
+/data
+
+# Ignore Vite cache
+**/.vite/
+
+# Ignore packaged add-on release artifacts
+/release/
+docs/SUPERVISOR_CACHING.md
+/localdocs
