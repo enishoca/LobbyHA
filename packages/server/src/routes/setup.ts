@@ -1,6 +1,8 @@
 import { Router, type Request, type Response } from 'express';
 import { needsSetup, getConfig, saveConfig, loadConfig, type AppConfig } from '../config.js';
 import { getAdminPassword, setAdminPassword, setGuestPinEnabled, saveGuestPins } from '../db.js';
+import { setupWebSocketProxy } from '../ws-proxy.js';
+import { server } from '../server.js';
 import logger from '../logger.js';
 
 const router = Router();
@@ -79,6 +81,14 @@ router.post('/configure', async (req: Request, res: Response) => {
     const validPins = pins.map((p: unknown) => String(p).trim()).filter((p: string) => p.length > 0);
     saveGuestPins(validPins);
     logger.info(`Setup: saved ${validPins.length} guest PIN(s), enabled=${pinEnabled}`);
+  }
+
+  // Initialize WebSocket proxy if this is the first configuration
+  try {
+    setupWebSocketProxy(server);
+    logger.info('Setup: WebSocket proxy initialized after configuration');
+  } catch {
+    // Already initialized — that's fine
   }
 
   res.json({ success: true, message: 'Setup complete! Redirecting...' });

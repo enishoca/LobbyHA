@@ -381,6 +381,7 @@
 }
 
 .entity-hide-button,
+.entity-gear-button,
 .entity-drag-handle {
   border: none;
   background: rgba(11, 16, 32, 0.85);
@@ -392,6 +393,8 @@
   transition: background 0.15s ease, transform 0.15s ease;
 }
 .entity-hide-button:hover { background: rgba(161, 27, 27, 0.8); transform: scale(1.1); }
+.entity-gear-button { display: flex; align-items: center; justify-content: center; padding: 0.3rem; }
+.entity-gear-button:hover { background: rgba(125, 162, 255, 0.35); transform: scale(1.15); color: #7da2ff; }
 
 .entity-drag-handle {
   cursor: grab;
@@ -1245,6 +1248,348 @@ button:focus-visible { outline: 2px solid #7da2ff; outline-offset: 2px; }
   cursor: pointer;
   font-weight: 600;
 }
+
+/* ─── Entity custom overlays ─────────────────────────────── */
+
+.entity-custom-icon {
+  position: absolute;
+  top: 0.45rem;
+  right: 0.5rem;
+  z-index: 4;
+  opacity: 0.8;
+  pointer-events: none;
+}
+
+.entity-custom-name {
+  position: absolute;
+  bottom: 0.3rem;
+  left: 0.5rem;
+  right: 0.5rem;
+  font-size: 0.7rem;
+  color: #7da2ff;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+/* ─── Emoji Picker ───────────────────────────────────────── */
+
+.emoji-picker-trigger {
+  background: rgba(11, 16, 32, 0.7);
+  border: 1px solid rgba(125, 162, 255, 0.3);
+  border-radius: 8px;
+  font-size: 1.4rem;
+  width: 2.8rem;
+  height: 2.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: border-color 0.15s, transform 0.1s;
+  flex-shrink: 0;
+}
+.emoji-picker-trigger:hover {
+  border-color: var(--accent-blue);
+  transform: scale(1.05);
+}
+
+.emoji-picker-panel {
+  position: fixed;
+  z-index: 10000;
+  background: #12152a;
+  border: 1px solid rgba(125, 162, 255, 0.3);
+  border-radius: 12px;
+  padding: 0.75rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  width: 280px;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.emoji-picker-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+}
+
+.emoji-picker-item {
+  background: none;
+  border: 2px solid transparent;
+  border-radius: 6px;
+  font-size: 1.3rem;
+  width: 2.2rem;
+  height: 2.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.1s, transform 0.1s;
+}
+.emoji-picker-item:hover {
+  background: rgba(125, 162, 255, 0.15);
+  transform: scale(1.15);
+}
+.emoji-picker-item.selected {
+  border-color: var(--accent-blue);
+  background: rgba(125, 162, 255, 0.2);
+}
+
+/* ─── Icon Picker ────────────────────────────────────────── */
+
+.icon-picker-trigger {
+  background: rgba(11, 16, 32, 0.7);
+  border: 1px solid rgba(125, 162, 255, 0.3);
+  border-radius: 8px;
+  width: 2.8rem;
+  height: 2.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #e6eeff;
+  transition: border-color 0.15s, transform 0.1s;
+  flex-shrink: 0;
+}
+.icon-picker-trigger:hover {
+  border-color: var(--accent-blue);
+  transform: scale(1.05);
+}
+
+.icon-picker-panel {
+  position: fixed;
+  z-index: 10001;
+  background: #12152a;
+  border: 1px solid rgba(125, 162, 255, 0.3);
+  border-radius: 14px;
+  padding: 0.75rem;
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.6);
+  width: 360px;
+  max-height: 440px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.icon-picker-search input {
+  width: 100%;
+  padding: 0.4rem 0.75rem;
+  background: #0b1020;
+  border: 1px solid rgba(125, 162, 255, 0.25);
+  border-radius: 8px;
+  color: #e6eeff;
+  font-size: 0.85rem;
+  outline: none;
+}
+.icon-picker-search input:focus { border-color: var(--accent-blue); }
+
+.icon-picker-categories {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.icon-cat-tab {
+  background: rgba(11, 16, 32, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 0.15rem 0.5rem;
+  font-size: 0.65rem;
+  color: var(--cat-color, #aaa);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+  white-space: nowrap;
+}
+.icon-cat-tab:hover { background: rgba(125, 162, 255, 0.15); }
+.icon-cat-tab.active {
+  background: rgba(125, 162, 255, 0.2);
+  border-color: var(--cat-color, var(--accent-blue));
+  font-weight: 600;
+}
+
+.icon-picker-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  overflow-y: auto;
+  max-height: 280px;
+  padding-right: 4px;
+}
+
+.icon-picker-item {
+  background: none;
+  border: 2px solid transparent;
+  border-radius: 6px;
+  width: 2.4rem;
+  height: 2.4rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.1s, transform 0.1s;
+}
+.icon-picker-item:hover {
+  background: rgba(125, 162, 255, 0.12);
+  transform: scale(1.2);
+}
+.icon-picker-item.selected {
+  border-color: var(--accent-blue);
+  background: rgba(125, 162, 255, 0.2);
+}
+
+.icon-picker-empty {
+  width: 100%;
+  text-align: center;
+  color: #667;
+  font-size: 0.85rem;
+  padding: 1rem;
+}
+
+/* ─── Entity Prop Editor ─────────────────────────────────── */
+
+.entity-prop-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.entity-prop-editor {
+  position: fixed;
+  z-index: 10000;
+  background: #12152a;
+  border: 1px solid rgba(125, 162, 255, 0.35);
+  border-radius: 14px;
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.6);
+  padding: 0;
+  overflow: hidden;
+}
+
+.entity-prop-header {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.6rem 0.75rem;
+  background: rgba(125, 162, 255, 0.08);
+  border-bottom: 1px solid rgba(125, 162, 255, 0.15);
+}
+
+.entity-prop-title {
+  flex: 1;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #e6eeff;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-transform: capitalize;
+}
+
+.entity-prop-close {
+  background: none;
+  border: none;
+  color: #667;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 0 0.25rem;
+  line-height: 1;
+}
+.entity-prop-close:hover { color: #ff6b6b; }
+
+.entity-prop-body {
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.entity-prop-field label {
+  display: block;
+  font-size: 0.7rem;
+  color: #667;
+  margin-bottom: 0.25rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.entity-prop-icon-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.entity-prop-icon-name {
+  font-size: 0.75rem;
+  color: #99aabb;
+}
+
+.entity-prop-clear-btn {
+  background: none;
+  border: none;
+  color: #ff6b6b;
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 0 0.25rem;
+}
+
+.entity-prop-input {
+  width: 100%;
+  padding: 0.4rem 0.6rem;
+  background: #0b1020;
+  border: 1px solid rgba(125, 162, 255, 0.25);
+  border-radius: 8px;
+  color: #e6eeff;
+  font-size: 0.85rem;
+}
+.entity-prop-input:focus { border-color: var(--accent-blue); outline: none; }
+
+.entity-prop-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.75rem;
+  border-top: 1px solid rgba(125, 162, 255, 0.1);
+}
+
+.entity-prop-hide-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: none;
+  border: 1px solid rgba(161, 27, 27, 0.4);
+  color: #ff6b6b;
+  padding: 0.3rem 0.6rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.75rem;
+  transition: background 0.15s;
+}
+.entity-prop-hide-btn:hover { background: rgba(161, 27, 27, 0.2); }
+
+.entity-prop-reset-btn {
+  background: none;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #99aabb;
+  padding: 0.3rem 0.6rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.75rem;
+}
+.entity-prop-reset-btn:hover { background: rgba(255, 255, 255, 0.05); }
+
+.entity-prop-save-btn {
+  background: var(--accent-blue);
+  border: none;
+  color: #000;
+  padding: 0.3rem 0.8rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-weight: 600;
+  transition: opacity 0.15s;
+}
+.entity-prop-save-btn:hover { opacity: 0.9; }
+.entity-prop-save-btn:disabled { opacity: 0.5; cursor: default; }
 
 /* ─── Responsive ──────────────────────────────────────────── */
 @media (max-width: 640px) {

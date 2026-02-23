@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { apiFetch } from '../shared/utils';
+import { EmojiPicker } from '../components/EmojiPicker';
 import type { Module } from '../types/modules';
 
 interface AreaManagerProps {
@@ -82,13 +83,8 @@ export function AreaManager({ sessionId, modules, onModulesChange, onClose }: Ar
         </div>
 
         {/* Create new area */}
-        <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
-          <input
-            style={{ width: '3rem', textAlign: 'center' }}
-            value={newIcon}
-            onChange={e => setNewIcon(e.target.value)}
-            placeholder="🏠"
-          />
+        <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', alignItems: 'center' }}>
+          <EmojiPicker value={newIcon} onChange={setNewIcon} />
           <input
             style={{ flex: 1 }}
             value={newName}
@@ -105,11 +101,7 @@ export function AreaManager({ sessionId, modules, onModulesChange, onClose }: Ar
             <li key={mod.id}>
               {editingId === mod.id ? (
                 <div style={{ display: 'flex', gap: '0.5rem', flex: 1, alignItems: 'center' }}>
-                  <input
-                    style={{ width: '3rem', textAlign: 'center' }}
-                    value={editIcon}
-                    onChange={e => setEditIcon(e.target.value)}
-                  />
+                  <EmojiPicker value={editIcon} onChange={setEditIcon} />
                   <input
                     style={{ flex: 1 }}
                     value={editName}

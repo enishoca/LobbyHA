@@ -6,6 +6,7 @@ import {
   readLayout, saveLayout,
   readGuestEntities, readGuestTitle, saveGuestEntities, saveGuestTitle,
   readModules, createModule, updateModule, deleteModule, setModuleEntities, reorderModules,
+  readAllEntityDisplayProps, readEntityDisplayProps, saveEntityDisplayProps, deleteEntityDisplayProps,
   type Module,
 } from '../db.js';
 
@@ -110,6 +111,29 @@ router.get('/guest-modules', requireGuestPin, async (_req: Request, res: Respons
   const visibleModules = allModules.filter(m => m.visible);
   const title = readGuestTitle();
   res.json({ modules: visibleModules, title });
+});
+
+// ─── Entity display props ───────────────────────────────────
+
+router.get('/entity-props', requireAdmin, (_req: Request, res: Response) => {
+  res.json({ props: readAllEntityDisplayProps() });
+});
+
+router.get('/entity-props/:entityId', requireAdmin, (req: Request, res: Response) => {
+  const props = readEntityDisplayProps(req.params.entityId);
+  res.json({ props: props ?? { entity_id: req.params.entityId, custom_name: null, custom_icon: null } });
+});
+
+router.post('/entity-props/:entityId', requireAdmin, (req: Request, res: Response) => {
+  const entityId = req.params.entityId;
+  const { custom_name, custom_icon } = req.body ?? {};
+  saveEntityDisplayProps(entityId, { custom_name: custom_name ?? null, custom_icon: custom_icon ?? null });
+  res.json({ props: readEntityDisplayProps(entityId) });
+});
+
+router.delete('/entity-props/:entityId', requireAdmin, (req: Request, res: Response) => {
+  deleteEntityDisplayProps(req.params.entityId);
+  res.json({ success: true });
 });
 
 export default router;

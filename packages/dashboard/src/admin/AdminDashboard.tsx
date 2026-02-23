@@ -4,6 +4,7 @@ import { EntityCard } from '../components/EntityCard';
 import { EntityDiscovery } from './EntityDiscovery';
 import { AreaManager } from './AreaManager';
 import { SettingsPanel } from './SettingsPanel';
+import { EntityPropEditor } from './EntityPropEditor';
 import type { Module } from '../types/modules';
 import QRCode from 'qrcode';
 import '../App.css';
@@ -33,6 +34,11 @@ export function AdminDashboard({ sessionId, hassUrl, hassToken, onLogout }: Admi
   const [showSettingsMenu, setShowSettingsMenu] = useState(false);
   const [showPasswordChange, setShowPasswordChange] = useState(false);
 
+  // Entity display props (custom icon/name overrides)
+  const [entityProps, setEntityProps] = useState<Record<string, { custom_name?: string | null; custom_icon?: string | null }>>({});
+  const [editingEntityId, setEditingEntityId] = useState<string | null>(null);
+  const [editingAnchorRect, setEditingAnchorRect] = useState<DOMRect | null>(null);
+
   // Password change
   const [currentPass, setCurrentPass] = useState('');
   const [newPass, setNewPass] = useState('');
@@ -48,14 +54,21 @@ export function AdminDashboard({ sessionId, hassUrl, hassToken, onLogout }: Admi
   const loadAll = useCallback(async (silent = false) => {
     if (!silent) setLoading(true);
     try {
-      const [modulesData, hiddenData, guestData] = await Promise.all([
+      const [modulesData, hiddenData, guestData, propsData] = await Promise.all([
         apiFetch<{ modules: Module[] }>('/api/ui/modules', { sessionId }),
         apiFetch<{ hidden: string[] }>('/api/ui/hidden', { sessionId }),
         apiFetch<{ title: string }>('/api/ui/guest-entities', { sessionId }),
+        apiFetch<{ props: Array<{ entity_id: string; custom_name?: string | null; custom_icon?: string | null }> }>('/api/ui/entity-props', { sessionId }),
       ]);
       setModules(modulesData.modules);
       setHiddenIds(new Set(hiddenData.hidden));
       setDashboardTitle(guestData.title || 'LobbyHA');
+      // Build props lookup map
+      const propsMap: Record<string, { custom_name?: string | null; custom_icon?: string | null }> = {};
+      for (const p of propsData.props) {
+        propsMap[p.entity_id] = { custom_name: p.custom_name, custom_icon: p.custom_icon };
+      }
+      setEntityProps(propsMap);
     } catch {
       // errors handled gracefully
     } finally {
@@ -314,7 +327,15 @@ export function AdminDashboard({ sessionId, hassUrl, hassToken, onLogout }: Admi
                       onDrop={() => handleEntityDrop(module.id, idx)}
                       onDragEnd={() => setDragInfo(null)}
                     >
-                      <EntityCard entityId={entityId} showActions showAttributes onHide={() => handleHide(entityId)} />
+                      <EntityCard
+                        entityId={entityId}
+                        showActions
+                        showAttributes
+                        onHide={() => handleHide(entityId)}
+                        onGearClick={(eid, rect) => { setEditingEntityId(eid); setEditingAnchorRect(rect); }}
+                        customName={entityProps[entityId]?.custom_name}
+                        customIcon={entityProps[entityId]?.custom_icon}
+                      />
                       <div className="entity-admin-actions">
                         <button
                           type="button"
@@ -352,6 +373,18 @@ export function AdminDashboard({ sessionId, hassUrl, hassToken, onLogout }: Admi
       </main>
 
       {/* Modals */}
+      {editingEntityId && editingAnchorRect && (
+        <EntityPropEditor
+          entityId={editingEntityId}
+          friendlyName={editingEntityId.split('.').slice(1).join('.').replace(/_/g, ' ')}
+          sessionId={sessionId}
+          anchorRect={editingAnchorRect}
+          onClose={() => { setEditingEntityId(null); setEditingAnchorRect(null); }}
+          onSave={() => loadAll(true)}
+          onHide={() => { handleHide(editingEntityId); setEditingEntityId(null); setEditingAnchorRect(null); }}
+        />
+      )}
+
       {showDiscovery && (
         <EntityDiscovery
           sessionId={sessionId}

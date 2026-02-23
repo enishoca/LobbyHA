@@ -101,6 +101,9 @@ app.use(errorHandler);
 
 // ─── Start ──────────────────────────────────────────────────
 
+// Expose server for lazy WS proxy init after setup
+export { server };
+
 async function start() {
   await initDb(dataDir);
 

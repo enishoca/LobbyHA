@@ -1,5 +1,6 @@
 import { EntitiesCardRow } from '@hakit/components';
 import { useHass, type EntityName } from '@hakit/core';
+import { Icon } from '@iconify/react';
 import { getDomain, isBinarySensorDoor, isBinarySensorMotion } from '../shared/entity-domains';
 
 /**
@@ -19,17 +20,26 @@ interface HaEntity {
 
 interface EntityCardProps {
   entityId: string;
-  /** Show admin controls (hide/drag) */
+  /** Show admin controls (gear icon) */
   showActions?: boolean;
   /** Called when hide button clicked */
   onHide?: (entityId: string) => void;
+  /** Called when gear icon clicked — receives the button's bounding rect for popup positioning */
+  onGearClick?: (entityId: string, rect: DOMRect) => void;
   /** Extra CSS class */
   className?: string;
   /** Show extended attributes in the detail popup (admin mode) */
   showAttributes?: boolean;
+  /** Custom display name override */
+  customName?: string | null;
+  /** Custom icon override (mdi:xxx) */
+  customIcon?: string | null;
 }
 
-export function EntityCard({ entityId, showActions, onHide, className, showAttributes }: EntityCardProps) {
+export function EntityCard({
+  entityId, showActions, onHide, onGearClick, className, showAttributes,
+  customName, customIcon,
+}: EntityCardProps) {
   const entities = useHass((state: { entities?: Record<string, HaEntity> }) => state.entities);
 
   const entity = entities?.[entityId];
@@ -79,12 +89,25 @@ export function EntityCard({ entityId, showActions, onHide, className, showAttri
         <div className="entity-card-actions">
           <button
             type="button"
-            className="entity-hide-button"
-            onClick={(e) => { e.stopPropagation(); onHide?.(entityId); }}
-            title="Hide entity"
+            className="entity-gear-button"
+            onClick={(e) => {
+              e.stopPropagation();
+              if (onGearClick) {
+                onGearClick(entityId, (e.currentTarget as HTMLElement).getBoundingClientRect());
+              } else {
+                onHide?.(entityId);
+              }
+            }}
+            title="Entity settings"
           >
-            ×
+            <Icon icon="mdi:cog" width={14} height={14} />
           </button>
+        </div>
+      )}
+      {/* Custom icon overlay */}
+      {customIcon && (
+        <div className="entity-custom-icon">
+          <Icon icon={customIcon} width={20} height={20} />
         </div>
       )}
       <EntitiesCardRow
@@ -94,6 +117,9 @@ export function EntityCard({ entityId, showActions, onHide, className, showAttri
         // @ts-expect-error modalProps includes UI flags not in HAKit's public types
         modalProps={modalPropsExtra}
       />
+      {customName && (
+        <div className="entity-custom-name">{customName}</div>
+      )}
     </div>
   );
 }

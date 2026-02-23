@@ -1,1 +1,0 @@
-import{F as a,c as r}from"./EntityCard-CZPAd1EA.js";import"./index-D630IaMI.js";function s({entity:t,mapHeight:e,...o}){return a(r,{entity:t,mapHeight:e,...o})}export{s as ModalPersonControls,s as default};

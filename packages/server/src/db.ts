@@ -60,6 +60,13 @@ export async function initDb(dataDir: string): Promise<Database> {
     FOREIGN KEY (module_id) REFERENCES modules(id) ON DELETE CASCADE
   )`);
 
+  // Per-entity display property overrides (icon, name, etc.)
+  db.run(`CREATE TABLE IF NOT EXISTS entity_display_props (
+    entity_id TEXT PRIMARY KEY,
+    custom_name TEXT,
+    custom_icon TEXT
+  )`);
+
   persistDb();
   logger.info('Database initialized');
   return db;
@@ -233,6 +240,50 @@ export function reorderModules(moduleIds: number[]): void {
   moduleIds.forEach((id, index) => {
     d.run("UPDATE modules SET position = ? WHERE id = ?", [index, id]);
   });
+  persistDb();
+}
+
+// ─── Entity Display Props ────────────────────────────────────
+
+export interface EntityDisplayProps {
+  entity_id: string;
+  custom_name?: string | null;
+  custom_icon?: string | null;
+}
+
+export function readEntityDisplayProps(entityId: string): EntityDisplayProps | null {
+  const result = getDb().exec(
+    "SELECT entity_id, custom_name, custom_icon FROM entity_display_props WHERE entity_id = ?",
+    [entityId],
+  );
+  if (!result.length || !result[0].values.length) return null;
+  const [eid, name, icon] = result[0].values[0] as [string, string | null, string | null];
+  return { entity_id: eid, custom_name: name, custom_icon: icon };
+}
+
+export function readAllEntityDisplayProps(): EntityDisplayProps[] {
+  const result = getDb().exec("SELECT entity_id, custom_name, custom_icon FROM entity_display_props");
+  if (!result.length) return [];
+  return result[0].values.map(row => ({
+    entity_id: row[0] as string,
+    custom_name: row[1] as string | null,
+    custom_icon: row[2] as string | null,
+  }));
+}
+
+export function saveEntityDisplayProps(entityId: string, props: { custom_name?: string | null; custom_icon?: string | null }): void {
+  const d = getDb();
+  d.run(
+    `INSERT INTO entity_display_props (entity_id, custom_name, custom_icon)
+     VALUES (?, ?, ?)
+     ON CONFLICT(entity_id) DO UPDATE SET custom_name = ?, custom_icon = ?`,
+    [entityId, props.custom_name ?? null, props.custom_icon ?? null, props.custom_name ?? null, props.custom_icon ?? null],
+  );
+  persistDb();
+}
+
+export function deleteEntityDisplayProps(entityId: string): void {
+  getDb().run("DELETE FROM entity_display_props WHERE entity_id = ?", [entityId]);
   persistDb();
 }
 

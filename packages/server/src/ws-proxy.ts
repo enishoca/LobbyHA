@@ -3,7 +3,15 @@ import { WebSocketServer, WebSocket } from 'ws';
 import { getConfig } from './config.js';
 import logger from './logger.js';
 
+let initialized = false;
+
 export function setupWebSocketProxy(server: Server): void {
+  if (initialized) {
+    logger.debug('WS: proxy already initialized, skipping');
+    return;
+  }
+  initialized = true;
+
   const wss = new WebSocketServer({ server });
 
   wss.on('connection', (clientWs) => {
