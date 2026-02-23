@@ -12,6 +12,9 @@
     "start": "npm run start -w @lobbyha/server",
     "setup": "npm install --legacy-peer-deps && npm run build"
   },
+  "bin": {
+    "lobbyha": "./bin/lobbyha.mjs"
+  },
   "dependencies": {
     "@emotion/is-prop-valid": "^1.4.0",
     "@emotion/react": "^11.14.0",

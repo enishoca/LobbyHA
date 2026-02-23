@@ -3,7 +3,7 @@ import express from 'express';
 import path from 'path';
 import fs from 'fs';
 
-import { getDataDir, bootstrapConfig, loadConfig, needsSetup, migrateFileConfigToDb } from './config.js';
+import { getDataDir, bootstrapConfig, loadConfig, needsSetup, migrateFileConfigToDb, setCliPort } from './config.js';
 import { initDb } from './db.js';
 import logger from './logger.js';
 import { setupWebSocketProxy } from './ws-proxy.js';
@@ -17,12 +17,54 @@ import setupRoutes from './routes/setup.js';
 import guestAuthRoutes from './routes/guest-auth.js';
 import { requireGuestPin } from './middleware/guest-auth.js';
 
+// ─── CLI Arguments ──────────────────────────────────────────
+
+function parseCliArgs(): { port?: number; dataDir?: string } {
+  const args = process.argv.slice(2);
+  const result: { port?: number; dataDir?: string } = {};
+
+  for (let i = 0; i < args.length; i++) {
+    if ((args[i] === '--port' || args[i] === '-p') && args[i + 1]) {
+      const p = Number(args[i + 1]);
+      if (!isNaN(p) && p > 0 && p < 65536) result.port = p;
+      i++;
+    } else if ((args[i] === '--data-dir' || args[i] === '-d') && args[i + 1]) {
+      result.dataDir = args[i + 1];
+      i++;
+    } else if (args[i] === '--help' || args[i] === '-h') {
+      console.log(`
+LobbyHA — Guest dashboard for Home Assistant
+
+Usage: lobbyha [options]
+
+Options:
+  --port, -p <number>      Port to listen on (default: 3000)
+  --data-dir, -d <path>    Data directory for database (default: ./data)
+  --help, -h               Show this help message
+
+Environment variables:
+  PORT                     Port (overridden by --port)
+  HA_URL                   Home Assistant URL
+  HA_TOKEN                 Long-lived access token
+  LOG_LEVEL                Log level (DEBUG, INFO, WARN, ERROR)
+`);
+      process.exit(0);
+    }
+  }
+  return result;
+}
+
+const cliArgs = parseCliArgs();
+
+// Apply CLI overrides before bootstrap
+if (cliArgs.port) setCliPort(cliArgs.port);
+
 const app = express();
 const server = http.createServer(app);
 
 // ─── Bootstrap ──────────────────────────────────────────────
 
-const dataDir = getDataDir();
+const dataDir = getDataDir(cliArgs.dataDir);
 // Minimal config from env/defaults so we know PORT before DB is up
 let config = bootstrapConfig();
 

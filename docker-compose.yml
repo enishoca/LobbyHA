@@ -1,0 +1,19 @@
+services:
+  lobbyha:
+    build: .
+    image: ghcr.io/enishoca/lobbyha:latest
+    container_name: lobbyha
+    restart: unless-stopped
+    ports:
+      - "${PORT:-3000}:3000"
+    volumes:
+      - lobbyha-data:/data
+    environment:
+      - NODE_ENV=production
+      # - HA_URL=http://homeassistant.local:8123
+      # - HA_TOKEN=your_long_lived_access_token
+      # - PORT=3000
+      # - LOG_LEVEL=INFO
+
+volumes:
+  lobbyha-data:

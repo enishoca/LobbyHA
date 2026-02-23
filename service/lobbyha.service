@@ -1,0 +1,31 @@
+[Unit]
+Description=LobbyHA — Guest Dashboard for Home Assistant
+Documentation=https://github.com/enishoca/LobbyHA
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=lobbyha
+Group=lobbyha
+WorkingDirectory=/opt/lobbyha
+ExecStart=/usr/bin/node --import tsx packages/server/src/server.ts
+Restart=on-failure
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=lobbyha
+
+# Environment
+Environment=NODE_ENV=production
+EnvironmentFile=-/etc/default/lobbyha
+
+# Hardening
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/lobbyha/data
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

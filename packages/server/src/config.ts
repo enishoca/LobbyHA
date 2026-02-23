@@ -20,6 +20,15 @@ const DEFAULT_CONFIG: AppConfig = {
 };
 
 let cachedConfig: AppConfig | null = null;
+let cliPortOverride: number | null = null;
+
+/**
+ * Set a CLI-provided port override. Takes highest priority over
+ * DB settings, env vars, and defaults.
+ */
+export function setCliPort(port: number): void {
+  cliPortOverride = port;
+}
 
 export function getDataDir(override?: string): string {
   if (override) return path.resolve(override);
@@ -41,7 +50,7 @@ export function bootstrapConfig(): AppConfig {
   const config: AppConfig = {
     HA_URL: process.env.HA_URL || DEFAULT_CONFIG.HA_URL,
     HA_TOKEN: process.env.HA_TOKEN || '',
-    PORT: Number(process.env.PORT || DEFAULT_CONFIG.PORT),
+    PORT: cliPortOverride || Number(process.env.PORT || DEFAULT_CONFIG.PORT),
     LOG_LEVEL: (process.env.LOG_LEVEL || DEFAULT_CONFIG.LOG_LEVEL).toUpperCase(),
     ALLOWED_ENTITIES: process.env.ALLOWED_ENTITIES
       ? process.env.ALLOWED_ENTITIES.split(',').map(e => e.trim()).filter(Boolean)
@@ -63,7 +72,7 @@ export function loadConfig(): AppConfig {
   cachedConfig = {
     HA_URL: settings.HA_URL || process.env.HA_URL || DEFAULT_CONFIG.HA_URL,
     HA_TOKEN: settings.HA_TOKEN || process.env.HA_TOKEN || '',
-    PORT: Number(settings.PORT || process.env.PORT || DEFAULT_CONFIG.PORT),
+    PORT: cliPortOverride || Number(settings.PORT || process.env.PORT || DEFAULT_CONFIG.PORT),
     LOG_LEVEL: (settings.LOG_LEVEL || process.env.LOG_LEVEL || DEFAULT_CONFIG.LOG_LEVEL).toUpperCase(),
     ALLOWED_ENTITIES: allowedRaw ? allowedRaw.split(',').map(e => e.trim()).filter(Boolean) : [],
     ADMIN_PASSWORD: settings.ADMIN_PASSWORD || undefined,
