@@ -7,9 +7,13 @@
 ![Docker](https://img.shields.io/badge/docker-ready-2496ED?logo=docker&logoColor=white)
 ![License](https://img.shields.io/badge/license-MIT-lightgrey)
 
+<img src="logo.png" alt="LobbyHA" width="128" height="128" align="left" style="margin-right:16px; margin-bottom:8px;" />
+
 A **guest-facing lobby for your Home Assistant smart home**, designed for TVs, wall tablets, and shared devices where guests should control *some* things — but never see your full Home Assistant UI or credentials.
 
 LobbyHA separates guest views from your private Home Assistant environment. Guests only see what you choose. You keep complete control. Guests can scan a QR code to open their own dashboard view — without revealing your Home Assistant URL, credentials, or admin interface. Optionally, protect guest access with a **PIN code** so only authorized guests can view the dashboard.
+
+<br clear="both" />
 
 ---
 
@@ -42,7 +46,8 @@ LobbyHA solves this by:
 - **Secure Admin Auth** — PBKDF2 SHA-512 with 100k iterations, timing-safe comparison
 - **Configurable Port** — set via `--port` CLI flag, `PORT` env var, Setup Wizard, or Admin Settings
 - **Server Restart Button** — restart the server from the Admin Settings panel (saves settings first)
-- **Docker Support** — multi-arch image published to GitHub Container Registry
+- **Docker Support** — multi-arch image, works standalone or as HA add-on
+- **Home Assistant Add-on** — install directly from the add-on store as a custom repository
 - **Service Install** — systemd (Linux) and launchd (macOS) service definitions included
 
 ---
@@ -73,7 +78,28 @@ Choose your preferred installation method below.
 
 ---
 
-### Option 1: From Source (Development)
+### Option 1: Home Assistant Add-on (Recommended)
+
+Install LobbyHA directly as a Home Assistant add-on:
+
+1. In Home Assistant, go to **Settings → Add-ons → Add-on Store**.
+2. Click **⋮** (top right) → **Repositories**.
+3. Add: `https://github.com/enishoca/guesthouse`
+4. Find **LobbyHA** in the store and click **Install**.
+5. Start the add-on.
+6. Open `http://<HA_IP>:3000/setup` to run the Setup Wizard.
+
+The add-on builds the Docker image locally on your device. All data is persisted in `/data/lobbyha.db` across restarts and updates.
+
+> **Port:** The add-on defaults to host port **3000**. To change it, go to the add-on's **Configuration → Network** panel in Supervisor and set a different host port. If port 3000 conflicts with another add-on, Supervisor will show an error in the add-on's **Log** tab — change the host port to an available one (e.g., 3001, 8080).
+
+> **QR Code:** The QR code is generated from your browser's current URL, so it always encodes the correct LAN address and port — no extra configuration needed, even if you change the host port.
+
+> **Add-on options:** Only `LOG_LEVEL` is exposed in the Supervisor UI. All other settings (HA URL, token, admin password, PINs) are configured through the Setup Wizard and Admin Settings panel.
+
+---
+
+### Option 2: From Source (Development)
 
 ```bash
 git clone https://github.com/enishoca/LobbyHA.git
@@ -102,7 +128,7 @@ npm run dev
 
 ---
 
-### Option 2: Docker
+### Option 3: Docker
 
 #### Quick Start
 
@@ -161,7 +187,7 @@ docker run -d -p 8080:8080 -e PORT=8080 -v lobbyha-data:/data ghcr.io/enishoca/l
 
 ---
 
-### Option 3: System Service (Linux / macOS)
+### Option 4: System Service (Linux / macOS)
 
 Install LobbyHA as a background service that starts on boot.
 
@@ -315,8 +341,19 @@ All settings can be changed from the **Admin Dashboard → Settings** panel at `
 
 ```
 LobbyHA/
+├── config.yaml              # HA add-on manifest
+├── repository.yaml          # HA add-on repository metadata
+├── icon.png                 # Add-on icon (64x64)
+├── logo.png                 # Add-on logo (128x128)
+├── DOCS.md                  # Add-on documentation (shown in Supervisor)
+├── CHANGELOG.md             # Release history
+├── Dockerfile               # Multi-stage Docker build (standalone + add-on)
+├── docker-compose.yml       # Docker Compose config
+├── addon/
+│   └── translations/
+│       └── en.yaml          # Add-on UI labels
 ├── bin/
-│   └── lobbyha.mjs         # CLI entry point
+│   └── lobbyha.mjs          # CLI entry point
 ├── packages/
 │   ├── server/              # Express API + WebSocket proxy + SQLite
 │   │   └── src/
@@ -337,8 +374,6 @@ LobbyHA/
 │   └── com.lobbyha.plist    # macOS LaunchAgent
 ├── scripts/
 │   └── install-service.sh   # Service installer (Linux/macOS)
-├── Dockerfile               # Multi-stage Docker build
-├── docker-compose.yml       # Docker Compose config
 ├── data/                    # SQLite database (auto-created)
 └── package.json             # Workspace root
 ```

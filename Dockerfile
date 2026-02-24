@@ -44,15 +44,12 @@ COPY packages/server/ packages/server/
 COPY --from=build /app/packages/dashboard/dist packages/dashboard/dist/
 
 # Create data directory
-RUN mkdir -p /data && chown node:node /data
+RUN mkdir -p /data
 
 # Runtime config
 ENV NODE_ENV=production
 ENV PORT=3000
 EXPOSE 3000
-
-# Run as non-root
-USER node
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \

@@ -1,0 +1,5 @@
+---
+configuration:
+  LOG_LEVEL:
+    name: Log Level
+    description: "Logging verbosity. DEBUG is most verbose."
