@@ -36,5 +36,5 @@ The add-on exposes port **3000** by default. Access the dashboard at `http://<HA
 
 ## More information
 
-- [GitHub Repository](https://github.com/enishoca/guesthouse)
-- [Full README](https://github.com/enishoca/guesthouse/blob/main/README.md)
+- [GitHub Repository](https://github.com/enishoca/LobbyHA)
+- [Full README](https://github.com/enishoca/LobbyHA/blob/main/README.md)

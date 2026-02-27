@@ -84,7 +84,7 @@ Install LobbyHA directly as a Home Assistant add-on:
 
 1. In Home Assistant, go to **Settings → Add-ons → Add-on Store**.
 2. Click **⋮** (top right) → **Repositories**.
-3. Add: `https://github.com/enishoca/guesthouse`
+3. Add: `https://github.com/enishoca/LobbyHA`
 4. Find **LobbyHA** in the store and click **Install**.
 5. Start the add-on.
 6. Open `http://<HA_IP>:3000/setup` to run the Setup Wizard.

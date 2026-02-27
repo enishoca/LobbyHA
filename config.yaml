@@ -3,7 +3,7 @@ name: LobbyHA
 version: "0.5.0"
 slug: lobbyha
 description: "Guest-facing dashboard for Home Assistant — curated, locked-down, kiosk-ready"
-url: "https://github.com/enishoca/guesthouse"
+url: "https://github.com/enishoca/LobbyHA"
 arch:
   - amd64
   - aarch64
@@ -20,4 +20,10 @@ options:
   LOG_LEVEL: "INFO"
 schema:
   LOG_LEVEL: "list(DEBUG|INFO|WARNING|ERROR|CRITICAL)?"
-image: "{arch}-lobbyha"
+
+# build section tells Supervisor to construct the image from source instead of
+# pulling a prebuilt one. Users installing the repo will build locally, meaning
+# there is no need to publish to a registry.
+build:
+  context: .
+  dockerfile: Dockerfile
