@@ -1,6 +1,6 @@
 ---
 name: LobbyHA
-version: "0.5.0"
+version: "0.6.0"
 slug: lobbyha
 description: "Guest-facing dashboard for Home Assistant — curated, locked-down, kiosk-ready"
 url: "https://github.com/enishoca/LobbyHA"

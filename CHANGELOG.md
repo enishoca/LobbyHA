@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.5.0
+## 0.6.0
 
 - Initial Home Assistant add-on release
 - Setup Wizard for first-run configuration
